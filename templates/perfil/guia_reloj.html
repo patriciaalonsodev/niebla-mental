@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block titulo %}Conectar Apple Salud{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a href="{{ url_for('perfil.inicio') }}#reloj">← Perfil</a></p>
+  <h1>Conectar Apple Salud</h1>
+  <p class="subtitulo">Tu Apple Watch guarda pasos, ejercicio y sueño en la app Salud del iPhone.
+    Con dos automatizaciones de <strong>Atajos</strong>, el iPhone los envía a esta app cada día, sin que hagas nada.</p>
+
+  <section class="panel guia">
+    <h2 class="titulo-panel">Antes de empezar</h2>
+    <ol>
+      <li>En el <a href="{{ url_for('perfil.inicio') }}#reloj">Perfil</a>, pulsa <strong>🔑 Crear mi clave</strong> y ten a mano la clave y la dirección.</li>
+      <li>⚠️ El iPhone tiene que poder llegar a la app: eso será cuando esté <strong>publicada en internet</strong>.
+        Mientras la app solo esté en tu PC, puedes dejarlo montado y empezará a funcionar en cuanto la publiquemos.</li>
+    </ol>
+    <p class="ayuda">Los nombres de los botones pueden variar un poco según la versión de iOS. Si algo no te sale igual, mándame una captura.</p>
+  </section>
+
+  <section class="panel guia">
+    <h2 class="titulo-panel">👟 1. Pasos y actividad (cada noche)</h2>
+    <ol>
+      <li>Abre <strong>Atajos</strong> → pestaña <strong>Automatización</strong> → <strong>＋</strong> → <strong>Hora del día</strong>.</li>
+      <li>Elige <strong>22:00</strong>, <strong>Diariamente</strong> y <strong>Ejecutar inmediatamente</strong>. Pulsa <strong>Siguiente</strong> → <strong>Nueva automatización en blanco</strong>.</li>
+      <li>Añade la acción <strong>Buscar muestras de salud</strong>:
+        tipo <strong>Pasos</strong>, filtro <strong>Fecha de inicio · es hoy</strong> y <strong>Agrupar por · Día</strong>.</li>
+      <li>Añade <strong>Obtener detalles de muestras de salud</strong> → <strong>Valor</strong>. (Ese número son tus pasos de hoy.)</li>
+      <li>Repite los dos pasos anteriores con <strong>Energía activa</strong> y con <strong>Tiempo de ejercicio</strong> (si quieres, también <strong>Distancia andando y corriendo</strong>).</li>
+      <li>Añade <strong>Obtener contenido de URL</strong> y pulsa la flecha para ver las opciones:
+        <ul>
+          <li><strong>URL</strong>: <code>{{ url_api }}</code> (la dirección del Perfil).</li>
+          <li><strong>Método</strong>: POST.</li>
+          <li><strong>Encabezados</strong>: añade <code>Authorization</code> con el valor <code>Bearer TU_CLAVE</code> (la palabra Bearer, un espacio y tu clave).</li>
+          <li><strong>Cuerpo de la solicitud</strong>: JSON, con estos campos de tipo <strong>Número</strong>:
+            <code>pasos</code>, <code>kcal_activas</code>, <code>minutos_activos</code> (y <code>distancia_km</code>),
+            cada uno con su <em>Valor</em> de los pasos anteriores.</li>
+        </ul>
+      </li>
+      <li>(Opcional) Añade <strong>Mostrar notificación</strong> con el <em>Contenido de la URL</em>: verás «Guardado: 8345 pasos ✓».</li>
+      <li>Pulsa <strong>▶</strong> abajo para probarla.</li>
+    </ol>
+  </section>
+
+  <section class="panel guia">
+    <h2 class="titulo-panel">😴 2. Sueño (cada mañana)</h2>
+    <ol>
+      <li>Nueva automatización → <strong>Hora del día</strong> → <strong>11:00</strong>, diariamente, ejecutar inmediatamente.</li>
+      <li><strong>Buscar muestras de salud</strong>: tipo <strong>Análisis del sueño</strong>,
+        filtros <strong>Fecha de inicio · está en las últimas 18 horas</strong> y <strong>Valor · no es · En cama</strong>,
+        ordenar por <strong>Fecha de inicio</strong> (de más antiguo a más nuevo).</li>
+      <li><strong>Obtener elemento de la lista</strong> → <strong>Primer elemento</strong> → <strong>Obtener detalles: Fecha de inicio</strong> → es la hora a la que te dormiste.</li>
+      <li>Otra vez <strong>Obtener elemento de la lista</strong> → <strong>Último elemento</strong> → <strong>Obtener detalles: Fecha de finalización</strong> → la hora a la que te despertaste.</li>
+      <li>A cada una aplícale <strong>Formatear fecha</strong> con el formato <strong>ISO 8601</strong>.</li>
+      <li><strong>Obtener contenido de URL</strong> igual que antes (URL, POST y el encabezado con tu clave), con cuerpo JSON:
+        un campo <code>sueno</code> de tipo <strong>Diccionario</strong> que lleve dentro
+        <code>acostarse</code> y <code>levantarse</code> (tipo Texto, con las fechas formateadas).</li>
+    </ol>
+    <p class="ayuda">Con eso la app calcula cuánto has dormido. Si quieres también las fases (profundo, REM, ligero),
+      se pueden añadir los campos <code>profundo</code>, <code>rem</code> y <code>ligero</code> en minutos: te ayudo a montarlo cuando lo tengas.</p>
+  </section>
+
+  <section class="panel guia">
+    <h2 class="titulo-panel">🤖 ¿Y en Android?</h2>
+    <p>La app recibe los mismos datos desde cualquier sitio. En Android, los relojes (Samsung, Xiaomi, Fitbit…) guardan los
+      datos en <strong>Health Connect</strong>; cualquier app de automatización que pueda leerlo y hacer una petición web
+      (como Tasker con un complemento de salud) puede enviarlos igual, con la misma dirección y la misma clave.
+      Y siempre puedes apuntarlos a mano en Salud → Actividad o Sueño.</p>
+  </section>
+{% endblock %}

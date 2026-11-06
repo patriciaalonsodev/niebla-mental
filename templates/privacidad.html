@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block titulo %}Privacidad{% endblock %}
+
+{% block contenido %}
+  <article class="texto-largo">
+    <h1>Política de privacidad</h1>
+    <p class="aviso aviso-info">Borrador: antes de abrir la app a otras personas, este texto debe revisarlo alguien con conocimientos de protección de datos.</p>
+
+    <h2>Qué datos guardamos</h2>
+    <p>Tu nombre, tu email y tu contraseña (guardada como hash, nunca en texto legible). También lo que escribas en la app: tareas, notas, lista de la compra, diario y, más adelante, síntomas y medicación.</p>
+
+    <h2>Datos de salud</h2>
+    <p>El diario y los datos de salud son una categoría especial según el artículo 9 del RGPD. Solo los guardamos con tu consentimiento explícito, y se cifran antes de llegar a la base de datos.</p>
+
+    <h2>Para qué los usamos</h2>
+    <p>Solo para que la app funcione para ti. No los vendemos ni los compartimos con nadie.</p>
+
+    <h2>Tus derechos</h2>
+    <p>Puedes consultar, corregir, exportar o borrar tus datos cuando quieras. Al borrar la cuenta se elimina todo lo tuyo.</p>
+  </article>
+{% endblock %}

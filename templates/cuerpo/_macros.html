@@ -1,0 +1,22 @@
+{# Gráfica de barras de la semana (SVG hecho a mano) #}
+{% macro barras(g, unidad, etiqueta) %}
+  <figure class="grafica-barras">
+    <svg viewBox="0 0 {{ g.ancho }} {{ g.alto }}" role="img"
+         aria-label="{{ etiqueta }}: {% for b in g.barras %}{{ b.fecha|fecha_corta }} {{ b.valor|kg }} {{ unidad }}{% if not loop.last %}, {% endif %}{% endfor %}">
+      {% if g.linea_objetivo is not none %}
+        <line class="linea-objetivo" x1="0" x2="{{ g.ancho }}" y1="{{ g.linea_objetivo }}" y2="{{ g.linea_objetivo }}"/>
+      {% endif %}
+      {% for b in g.barras %}
+        <rect class="barra{% if b.llega %} barra-llega{% endif %}{% if b.es_hoy %} barra-hoy{% endif %}"
+              x="{{ b.x }}" y="{{ b.y }}" width="{{ b.ancho }}" height="{{ b.alto }}" rx="5">
+          <title>{{ b.fecha|fecha_corta }}: {{ b.valor|kg }} {{ unidad }}</title>
+        </rect>
+        <text class="barra-dia{% if b.es_hoy %} barra-dia-hoy{% endif %}" x="{{ b.texto_x }}" y="{{ g.alto - 3 }}" text-anchor="middle">{{ b.dia }}</text>
+      {% endfor %}
+    </svg>
+  </figure>
+{% endmacro %}
+
+{% macro aviso_reloj(origen) %}
+  {% if origen == 'reloj' %}<span class="de-google" title="Llegó desde el reloj">⌚ del reloj</span>{% endif %}
+{% endmacro %}

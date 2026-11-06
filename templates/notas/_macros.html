@@ -1,0 +1,13 @@
+{# Piezas reutilizables de la sección de notas #}
+{% from "_campos.html" import campo, casilla %}
+
+{% macro formulario_nota(form, accion, texto_boton) %}
+  <form method="post" action="{{ accion }}" novalidate class="formulario">
+    {{ form.hidden_tag() }}
+    {{ campo(form.titulo, autocomplete="off") }}
+    {{ campo(form.contenido) }}
+    {{ campo(form.etiquetas, autocomplete="off") }}
+    {{ casilla(form.fijada) }}
+    <button class="boton boton-ancho" type="submit">{{ texto_boton }}</button>
+  </form>
+{% endmacro %}

@@ -1,0 +1,15 @@
+Flask>=3.0
+Flask-SQLAlchemy>=3.1
+Flask-Migrate>=4.0
+Flask-Login>=0.6
+cryptography>=42
+psycopg[binary]>=3.2
+python-dotenv>=1.0
+pytest>=8
+Flask-WTF>=1.2
+email-validator>=2.1
+tzdata>=2024.1
+requests>=2.32
+Pillow>=11
+anthropic>=2.6
+gunicorn>=23

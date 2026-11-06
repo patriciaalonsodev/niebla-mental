@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "diario/_macros.html" import formulario_diario %}
+
+{% block titulo %}Corregir página del diario{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a class="pasar-atras" href="{{ url_for('diario.listado') }}">← Diario</a></p>
+  <h1 class="solo-lectores">Corregir: {{ entrada.fecha|fecha_larga }}</h1>
+  {{ formulario_diario(form, url_for('diario.editar', entrada_id=entrada.id), "Guardar cambios") }}
+
+  <form method="post" action="{{ url_for('diario.borrar', entrada_id=entrada.id) }}" class="zona-borrar"
+        onsubmit="return confirm('¿Seguro que quieres arrancar esta página del diario?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="boton boton-peligro" type="submit">🗑️ Borrar esta página</button>
+  </form>
+{% endblock %}

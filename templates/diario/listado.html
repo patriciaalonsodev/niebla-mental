@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block titulo %}Diario{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <div class="diario-barra">
+    <h1>Diario</h1>
+    <a class="boton-redondo boton-redondo-principal" href="{{ url_for('diario.formulario_nueva') }}"
+       aria-label="Escribir una página nueva" title="Escribir">✍️</a>
+  </div>
+  <details class="mas-opciones diario-buscar" {% if busqueda or etiqueta_activa %}open{% endif %}>
+      <summary>🔍 Buscar o filtrar</summary>
+      <form method="get" action="{{ url_for('diario.listado') }}" class="buscador" role="search">
+        <label class="solo-lectores" for="q">Buscar en tu diario</label>
+        <input id="q" name="q" type="search" value="{{ busqueda }}" placeholder="Buscar en tu diario…">
+        {% if etiqueta_activa %}<input type="hidden" name="etiqueta" value="{{ etiqueta_activa }}">{% endif %}
+        <button class="boton boton-secundario" type="submit">Buscar</button>
+      </form>
+      {% if etiquetas %}
+        <nav class="chips" aria-label="Filtrar por etiqueta">
+          <a class="chip{% if not etiqueta_activa %} chip-activo{% endif %}"
+             href="{{ url_for('diario.listado', q=busqueda or None) }}">Todas</a>
+          {% for e in etiquetas %}
+            <a class="chip{% if e.nombre == etiqueta_activa %} chip-activo{% endif %}"
+               href="{{ url_for('diario.listado', etiqueta=e.nombre, q=busqueda or None) }}">#{{ e.nombre }}</a>
+          {% endfor %}
+        </nav>
+      {% endif %}
+    </details>
+
+  {% if entrada %}
+    {% set animo = emoji_animo(entrada.estado_animo) %}
+    {# Una página del diario: papel lila, renglones y letra a mano #}
+    <article class="hoja-diario" aria-label="Página {{ pagina }} de {{ total }}">
+      <header class="hoja-cabecera">
+        <span class="hoja-fecha">{{ entrada.fecha|fecha_larga }}{% if entrada.fecha.year != anio_actual %} de {{ entrada.fecha.year }}{% endif %}</span>
+        {% if animo %}<span class="hoja-animo" title="{{ animo[1] }}" aria-label="Ánimo: {{ animo[1] }}">{{ animo[0] }}</span>{% endif %}
+      </header>
+      {% if entrada.pregunta_guia %}<p class="hoja-pregunta">{{ entrada.pregunta_guia }}</p>{% endif %}
+      <div class="hoja-texto">{{ entrada.contenido }}</div>
+      <footer class="hoja-pie">
+        {% if entrada.etiquetas %}
+          <span class="hoja-etiquetas">{% for e in entrada.etiquetas %}#{{ e.nombre }} {% endfor %}</span>
+        {% endif %}
+        <a class="hoja-editar" href="{{ url_for('diario.editar', entrada_id=entrada.id) }}">✏️ Corregir</a>
+        <span class="hoja-numero">{{ pagina }}</span>
+      </footer>
+    </article>
+
+    <nav class="diario-paginas" aria-label="Pasar páginas del diario">
+      {% if pagina > 1 %}
+        <a class="boton boton-secundario pasar-atras" href="{{ url_for('diario.listado', pagina=pagina - 1, **filtros) }}">‹ Anterior</a>
+      {% else %}<span></span>{% endif %}
+      <span class="ayuda">Página {{ pagina }} de {{ total }}</span>
+      {% if pagina < total %}
+        <a class="boton boton-secundario" href="{{ url_for('diario.listado', pagina=pagina + 1, **filtros) }}">Siguiente ›</a>
+      {% else %}
+        <a class="boton boton-secundario" href="{{ url_for('diario.formulario_nueva') }}">Página nueva ›</a>
+      {% endif %}
+    </nav>
+  {% elif busqueda or etiqueta_activa %}
+    <p class="vacio">No hay páginas que coincidan. <a href="{{ url_for('diario.listado') }}">Ver todo el diario</a></p>
+  {% else %}
+    <article class="hoja-diario hoja-vacia">
+      <p class="hoja-texto">Tu diario está esperando la primera página 💜</p>
+      <p><a class="boton" href="{{ url_for('diario.formulario_nueva') }}">✍️ Empezar a escribir</a></p>
+    </article>
+  {% endif %}
+{% endblock %}

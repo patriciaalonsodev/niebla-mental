@@ -1,0 +1,26 @@
+{# Formulario de captura rápida, usado en el inicio y en la bandeja #}
+
+{% macro formulario_apunte(form, volver=None, autofocus=False) %}
+  <form method="post" action="{{ url_for('captura.apuntar') }}" novalidate class="formulario formulario-captura">
+    {{ form.hidden_tag() }}
+    {% if volver %}<input type="hidden" name="volver" value="{{ volver }}">{% endif %}
+    <div class="campo{% if form.texto.errors %} campo-con-error{% endif %}">
+      <label class="solo-lectores" for="{{ form.texto.id }}">{{ form.texto.label.text }}</label>
+      {{ form.texto(rows=2, autofocus=autofocus, autocomplete="off",
+                    placeholder="Una idea, algo que hacer, algo que comprar…",
+                    **({"aria-invalid": "true", "aria-describedby": "error-apunte"} if form.texto.errors else {})) }}
+      {% for error in form.texto.errors %}<p class="error" id="error-apunte">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="captura-pie">
+      <span class="ayuda">No hace falta decidir dónde va: lo ordenas luego.</span>
+      <button class="boton" type="submit">Guardar</button>
+    </div>
+  </form>
+  <script>
+    // Ctrl+Enter (o ⌘+Enter) guarda sin tener que ir al botón
+    document.currentScript.previousElementSibling.querySelector("textarea")
+      .addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.target.form.requestSubmit();
+      });
+  </script>
+{% endmacro %}

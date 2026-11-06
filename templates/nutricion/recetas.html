@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo, casilla %}
+{% from "nutricion/_macros.html" import pestanas %}
+
+{% block titulo %}Recetas{% endblock %}
+
+{# Botones de una receta: apuntar una ración hoy y guardarla #}
+{% macro acciones_receta(receta, guardada=None, ident=0) %}
+  <div class="receta-acciones">
+    <form method="post" action="{{ url_for('nutricion.apuntar_receta') }}" class="receta-apuntar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if guardada %}<input type="hidden" name="guardada" value="{{ guardada.id }}">
+      {% else %}<input type="hidden" name="receta" value="{{ receta|receta_json }}">{% endif %}
+      <label class="solo-lectores" for="momento-{{ 'g' ~ guardada.id if guardada else ident }}">¿Cuándo?</label>
+      <select name="momento" id="momento-{{ 'g' ~ guardada.id if guardada else ident }}">
+        {% for clave, nombre in momentos.items() %}<option value="{{ clave }}"{% if clave == 'comida' %} selected{% endif %}>{{ nombre }}</option>{% endfor %}
+      </select>
+      <button class="boton boton-pequeno" type="submit">＋ Apuntar 1 ración hoy</button>
+    </form>
+    {% if guardada %}
+      <form method="post" action="{{ url_for('nutricion.borrar_receta', receta_id=guardada.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario boton-pequeno" type="submit">Quitar</button>
+      </form>
+    {% else %}
+      <form method="post" action="{{ url_for('nutricion.guardar_receta') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="receta" value="{{ receta|receta_json }}">
+        <button class="boton boton-secundario boton-pequeno" type="submit">⭐ Guardar</button>
+      </form>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro tarjeta_receta(r, guardada=None, loop_id=0) %}
+  <article class="panel receta">
+    <h3 class="receta-titulo">{{ r.titulo }}</h3>
+    <p class="receta-descripcion">{{ r.descripcion }}</p>
+    <p class="receta-datos">
+      <span>⏱️ {{ r.tiempo_minutos }} min</span>
+      <span>🥄 Esfuerzo {{ r.esfuerzo }}</span>
+      <span>🍽️ {{ r.raciones }} {{ 'ración' if r.raciones == 1 else 'raciones' }}</span>
+    </p>
+    <p class="receta-macros"><strong>{{ r.kcal|round|int }} kcal</strong> por ración ·
+      P {{ r.proteinas|round|int }} g · H {{ r.hidratos|round|int }} g · G {{ r.grasas|round|int }} g</p>
+    <details class="mas-opciones">
+      <summary>Ver ingredientes y pasos</summary>
+      <h4>Ingredientes</h4>
+      <ul>{% for i in r.ingredientes %}<li>{{ i.nombre }} — {{ i.cantidad }}</li>{% endfor %}</ul>
+      <h4>Pasos</h4>
+      <ol>{% for p in r.pasos %}<li>{{ p }}</li>{% endfor %}</ol>
+      {% if r.truco %}<p class="ayuda">💡 {{ r.truco }}</p>{% endif %}
+    </details>
+    {{ acciones_receta(r, guardada, loop_id) }}
+  </article>
+{% endmacro %}
+
+{% block contenido %}
+  <h1>Nutrición</h1>
+  {{ pestanas("recetas") }}
+
+  {% if disponible %}
+    <section class="panel">
+      <h2 class="titulo-panel">✨ Busca recetas con IA</h2>
+      <form method="post" action="{{ url_for('nutricion.buscar_recetas') }}" novalidate class="formulario" id="form-recetas">
+        {{ form.hidden_tag() }}
+        {{ campo(form.peticion) }}
+        {{ casilla(form.ajustar) }}
+        <button class="boton boton-ancho" type="submit" {% if not quedan %}disabled{% endif %}>✨ Buscar 3 recetas</button>
+        <p class="ayuda">Te quedan {{ quedan }} búsquedas hoy. Tarda unos segundos.
+          Las calorías y macros son aproximadas.</p>
+      </form>
+    </section>
+    <script>
+      // Mientras la IA piensa, que se note que está trabajando
+      document.getElementById("form-recetas").addEventListener("submit", (e) => {
+        const boton = e.target.querySelector('button[type="submit"]');
+        boton.disabled = true;
+        boton.textContent = "✨ Buscando recetas…";
+      });
+    </script>
+  {% else %}
+    <section class="panel">
+      <h2 class="titulo-panel">✨ Recetas con IA</h2>
+      <p>Para activarlas hace falta una clave de la API de Claude en el archivo <code>.env</code>
+        (<code>ANTHROPIC_API_KEY</code>). Es de pago por uso: unos céntimos por búsqueda.</p>
+      <p class="ayuda">Mientras tanto puedes guardar tus platos en <a href="{{ url_for('nutricion.alimentos') }}">Alimentos</a>.</p>
+    </section>
+  {% endif %}
+
+  {% if error %}<p class="aviso aviso-error" role="alert">{{ error }}</p>{% endif %}
+
+  {% if sugerencias %}
+    <h2 class="compra-titulo">Ideas para ti</h2>
+    {% for r in sugerencias %}{{ tarjeta_receta(r, loop_id=loop.index) }}{% endfor %}
+  {% endif %}
+
+  {% if guardadas %}
+    <h2 class="compra-titulo">⭐ Tus recetas guardadas <span class="contador">{{ guardadas|length }}</span></h2>
+    {% for g in guardadas %}{{ tarjeta_receta(g.datos, guardada=g) }}{% endfor %}
+  {% endif %}
+{% endblock %}

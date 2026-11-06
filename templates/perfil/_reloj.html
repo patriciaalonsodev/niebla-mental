@@ -1,0 +1,54 @@
+{# Conexión con el reloj: Apple Salud (Atajos) o Android #}
+<section class="panel" aria-labelledby="titulo-reloj" id="reloj">
+  <h2 id="titulo-reloj" class="titulo-panel">
+    ⌚ Reloj y Apple Salud
+    {% if current_user.api_token_hash %}<span class="contador">Conectado</span>{% endif %}
+  </h2>
+
+  {% if clave_nueva %}
+    <div class="clave-nueva" role="alert">
+      <p><strong>Tu clave personal</strong> (cópiala ahora: por seguridad no se vuelve a mostrar):</p>
+      <p class="clave-caja"><code id="clave">{{ clave_nueva }}</code></p>
+      <button class="boton boton-pequeno" type="button" data-copiar="clave">📋 Copiar clave</button>
+      <p class="ayuda">Dirección a la que se envían los datos:</p>
+      <p class="clave-caja"><code id="url-api">{{ url_api }}</code></p>
+      <button class="boton boton-secundario boton-pequeno" type="button" data-copiar="url-api">📋 Copiar dirección</button>
+      <p class="ayuda">🔒 Con esta clave solo se pueden <em>enviar</em> pasos y sueño a tu cuenta; no sirve para leer nada.
+        Si la pierdes o alguien la ve, crea otra y la anterior dejará de funcionar.</p>
+    </div>
+  {% endif %}
+
+  {% if current_user.api_token_hash %}
+    <p>Clave creada el {{ current_user.api_token_creado|fecha_larga_dt }}.
+      {% if ultimo_envio %}Últimos datos del reloj: {{ ultimo_envio|fecha_larga_dt }} a las {{ ultimo_envio|hora_local }}.
+      {% else %}Aún no ha llegado nada del reloj.{% endif %}</p>
+  {% else %}
+    <p>Trae tus <strong>pasos, actividad y sueño</strong> del Apple Watch (o de tu Android) sin tener que apuntarlos.</p>
+  {% endif %}
+
+  <p class="ayuda">📱 En el iPhone se hace con una automatización de la app <strong>Atajos</strong>:
+    <a href="{{ url_for('perfil.guia_reloj') }}">ver la guía paso a paso</a>.</p>
+
+  <div class="acciones">
+    <form method="post" action="{{ url_for('perfil.clave_reloj') }}"
+          {% if current_user.api_token_hash %}onsubmit="return confirm('¿Crear una clave nueva? La anterior dejará de funcionar y tendrás que cambiarla en Atajos.');"{% endif %}>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="boton{% if current_user.api_token_hash %} boton-secundario{% endif %}" type="submit">
+        {{ "Crear una clave nueva" if current_user.api_token_hash else "🔑 Crear mi clave" }}
+      </button>
+    </form>
+    {% if current_user.api_token_hash %}
+      <form method="post" action="{{ url_for('perfil.quitar_reloj') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario" type="submit">Desconectar</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+<script>
+  document.querySelectorAll("[data-copiar]").forEach((b) => b.addEventListener("click", async () => {
+    const texto = document.getElementById(b.dataset.copiar).textContent;
+    try { await navigator.clipboard.writeText(texto); b.textContent = "✓ Copiado"; }
+    catch { b.textContent = "Mantén pulsado el texto para copiarlo"; }
+  }));
+</script>

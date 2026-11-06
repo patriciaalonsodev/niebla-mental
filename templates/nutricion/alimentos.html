@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "nutricion/_macros.html" import pestanas %}
+
+{% block titulo %}Mis alimentos{% endblock %}
+
+{% block contenido %}
+  <h1>Nutrición</h1>
+  {{ pestanas("alimentos") }}
+
+  <details class="panel panel-plegable" {% if form.errors or not alimentos %}open{% endif %}>
+    <summary class="titulo-panel">＋ Nuevo alimento</summary>
+    <p class="ayuda">Copia los valores <strong>por 100 g</strong> de la etiqueta del envase («Información nutricional»).</p>
+    <form method="post" action="{{ url_for('nutricion.alimentos') }}" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.nombre, autocomplete="off") }}
+      <div class="campos-fila campos-fila-2">
+        {{ campo(form.kcal, autocomplete="off") }}
+        {{ campo(form.proteinas, autocomplete="off") }}
+        {{ campo(form.hidratos, autocomplete="off") }}
+        {{ campo(form.grasas, autocomplete="off") }}
+      </div>
+      {{ campo(form.racion_g, autocomplete="off") }}
+      <button class="boton boton-ancho" type="submit">Guardar alimento</button>
+    </form>
+  </details>
+
+  {% if alimentos %}
+    <h2 class="compra-titulo">Tus alimentos <span class="contador">{{ alimentos|length }}</span> <span class="ayuda">(por 100 g)</span></h2>
+    <ul class="compra-filas">
+      {% for a in alimentos %}
+        <li class="compra-fila comida-fila">
+          <span class="compra-nombre">{{ a.nombre }}{% if a.racion_g %} <span class="ayuda">· ración {{ a.racion_g|kg }} g</span>{% endif %}</span>
+          <span class="comida-macros"><strong>{{ a.kcal|kg }}</strong> · P{{ a.proteinas|kg }} H{{ a.hidratos|kg }} G{{ a.grasas|kg }}</span>
+          <form method="post" action="{{ url_for('nutricion.borrar_alimento', alimento_id=a.id) }}"
+                onsubmit="return confirm('¿Borrar {{ a.nombre }} de tus alimentos?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="compra-quitar" type="submit" aria-label="Borrar {{ a.nombre }}">✕</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

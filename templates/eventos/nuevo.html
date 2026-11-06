@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "eventos/_macros.html" import formulario_evento %}
+
+{% block titulo %}Nuevo en la agenda{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a class="pasar-atras" href="{{ url_for('eventos.agenda', desde=form.fecha.data.isoformat() if form.fecha.data else None) }}">← Agenda</a></p>
+
+  <section class="panel">
+    <h1>Nuevo en la agenda</h1>
+    {{ formulario_evento(form, url_for('eventos.nuevo'), "Guardar en la agenda") }}
+  </section>
+{% endblock %}

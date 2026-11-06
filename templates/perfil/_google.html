@@ -1,0 +1,42 @@
+{# Panel de Google Calendar (en el perfil) #}
+<section class="panel panel-google" aria-labelledby="titulo-google">
+  <h2 id="titulo-google" class="titulo-panel">
+    📆 Google Calendar
+    {% if google.conexion %}<span class="contador">Conectado</span>{% endif %}
+  </h2>
+  {% if google.conexion %}
+    <p>Conectado{% if google.conexion.email %} con <strong>{{ google.conexion.email }}</strong>{% endif %}.
+      {% if google.conexion.ultima_sincronizacion %}Última sincronización a las {{ google.conexion.ultima_sincronizacion|hora_local }}.{% endif %}</p>
+    <p class="ayuda">Lo que apuntes en la agenda aparece en Google, y lo de Google de los próximos 60 días aparece en la agenda.</p>
+    <div class="acciones">
+      <form method="post" action="{{ url_for('google.sincronizar_ahora') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario" type="submit">🔄 Sincronizar ahora</button>
+      </form>
+      <form method="post" action="{{ url_for('google.desconectar') }}"
+            onsubmit="return confirm('¿Desconectar Google Calendar? Tus eventos se quedan en los dos sitios.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario" type="submit">Desconectar</button>
+      </form>
+    </div>
+    <form method="post" action="{{ url_for('google.privacidad') }}" class="formulario">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <fieldset class="campo">
+        <legend>🔒 ¿Cómo aparecen las citas médicas en Google?</legend>
+        <label class="opcion-privacidad"><input type="radio" name="detalle_citas" value="no" {% if not google.conexion.detalle_citas %}checked{% endif %}>
+          Solo «🩺 Cita médica» y la hora <span class="ayuda">(recomendado)</span></label>
+        <label class="opcion-privacidad"><input type="radio" name="detalle_citas" value="si" {% if google.conexion.detalle_citas %}checked{% endif %}>
+          Con título, lugar y profesional</label>
+        <p class="ayuda">Las preguntas y el resumen de la cita nunca salen de esta app.</p>
+      </fieldset>
+      <button class="boton boton-secundario" type="submit">Guardar preferencia</button>
+    </form>
+  {% else %}
+    <p>Conecta tu Google Calendar para ver en la agenda tus planes de Google y llevar allí los de esta app.</p>
+    <p class="ayuda">🔒 Las citas médicas llegan a Google solo como «Cita médica», sin detalles. Puedes cambiarlo luego.</p>
+    <form method="post" action="{{ url_for('google.conectar') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="boton" type="submit">Conectar con Google Calendar</button>
+    </form>
+  {% endif %}
+</section>

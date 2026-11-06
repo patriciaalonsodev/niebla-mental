@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "medicacion/_macros.html" import formulario_medicamento %}
+
+{% block titulo %}Editar medicamento{% endblock %}
+
+{% block contenido %}
+  <p><a href="{{ url_for('medicacion.inicio') }}">← Volver a medicación</a></p>
+
+  <section class="panel">
+    <h1>Editar medicamento</h1>
+    {{ formulario_medicamento(form, url_for('medicacion.editar', med_id=medicamento.id), "Guardar cambios") }}
+  </section>
+
+  <p class="ayuda">Si lo dejas por una temporada, mejor <strong>Pausar</strong> desde la lista: así no se pierde el historial de tomas.</p>
+  <form method="post" action="{{ url_for('medicacion.borrar', med_id=medicamento.id) }}" class="zona-borrar"
+        onsubmit="return confirm('¿Borrar este medicamento y todo su historial de tomas?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="boton boton-peligro" type="submit">🗑️ Borrar medicamento</button>
+  </form>
+{% endblock %}

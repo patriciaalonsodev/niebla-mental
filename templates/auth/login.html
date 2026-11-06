@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo, casilla %}
+
+{% block titulo %}Iniciar sesión{% endblock %}
+
+{% block contenido %}
+  <section class="panel-formulario">
+    <h1>Hola de nuevo 💜</h1>
+    <p class="subtitulo">Inicia sesión para ver tus cosas.</p>
+
+    <form method="post" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.email, autocomplete="email", autofocus=True) }}
+      {{ campo(form.password, autocomplete="current-password") }}
+      {{ casilla(form.recordar) }}
+
+      <button class="boton boton-ancho" type="submit">Entrar</button>
+    </form>
+
+    <p class="pie-formulario">¿Primera vez? <a href="{{ url_for('auth.registro') }}">Crea tu cuenta</a></p>
+  </section>
+{% endblock %}

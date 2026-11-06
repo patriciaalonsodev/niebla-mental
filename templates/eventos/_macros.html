@@ -1,0 +1,63 @@
+{# Piezas reutilizables de la agenda #}
+{% from "_campos.html" import campo %}
+{% from "tareas/_macros.html" import cucharas, selector_cucharas %}
+
+{% macro horario(evento) -%}
+  {%- if evento.hora_inicio -%}
+    {{ evento.hora_inicio.strftime('%H:%M') }}{% if evento.hora_fin %}–{{ evento.hora_fin.strftime('%H:%M') }}{% endif %}
+  {%- else -%}
+    Todo el día
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro fila_evento(evento) %}
+  <li class="tarea evento{% if evento.es_cita %} evento-cita{% endif %}">
+    <span class="evento-hora">{{ horario(evento) }}</span>
+    <a class="tarea-cuerpo" href="{{ url_for('eventos.editar', evento_id=evento.id) }}">
+      <span class="tarea-titulo">{% if evento.es_cita %}<span aria-hidden="true">🩺 </span><span class="solo-lectores">Cita médica: </span>{% endif %}{{ evento.titulo }}</span>
+      <span class="tarea-meta">
+        {%- if evento.profesional and evento.es_cita %}<span>{{ evento.profesional }}</span>{% endif -%}
+        {%- if evento.lugar %}<span>📍 {{ evento.lugar }}</span>{% endif -%}
+        {%- if evento.es_cita and evento.lista_preguntas() %}<span>❓ {{ evento.lista_preguntas()|length }} pregunta{{ 's' if evento.lista_preguntas()|length != 1 }}</span>{% endif -%}
+        {{- cucharas(evento.coste_energia) -}}
+        {%- if evento.origen == 'google' %}<span class="de-google">de Google</span>{% endif -%}
+      </span>
+    </a>
+  </li>
+{% endmacro %}
+
+{% macro formulario_evento(form, accion, texto_boton) %}
+  <form method="post" action="{{ accion }}" novalidate class="formulario formulario-evento">
+    {{ form.hidden_tag() }}
+    <fieldset class="campo selector-cucharas selector-tipo">
+      <legend>{{ form.tipo.label.text }}</legend>
+      <div class="opciones-cucharas">
+        {% for opcion in form.tipo %}
+          <label class="opcion-cuchara">{{ opcion() }}<span>{{ opcion.label.text }}</span></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {{ campo(form.titulo, autocomplete="off") }}
+    <div class="campos-fila">
+      {{ campo(form.fecha) }}
+      {{ campo(form.hora_inicio) }}
+      {{ campo(form.hora_fin) }}
+    </div>
+    <p class="ayuda">Sin hora, cuenta como «todo el día».</p>
+    {{ campo(form.lugar, autocomplete="off") }}
+
+    {# Se ven solo al elegir «Cita médica» (CSS con :has) #}
+    <div class="solo-cita">
+      {{ campo(form.profesional, autocomplete="off") }}
+      {{ campo(form.preguntas) }}
+      {{ campo(form.resumen) }}
+    </div>
+
+    {{ selector_cucharas(form.coste_energia) }}
+    <details class="mas-opciones" {% if form.notas.data %}open{% endif %}>
+      <summary>Añadir notas</summary>
+      {{ campo(form.notas) }}
+    </details>
+    <button class="boton boton-ancho" type="submit">{{ texto_boton }}</button>
+  </form>
+{% endmacro %}

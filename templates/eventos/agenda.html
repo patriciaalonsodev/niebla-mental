@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "eventos/_macros.html" import horario %}
+{% from "tareas/_macros.html" import cucharas %}
+
+{% block titulo %}Agenda{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <div class="agenda-cabecera">
+    <h1>Agenda</h1>
+    <a class="boton boton-pequeno" href="{{ url_for('eventos.formulario_nuevo') }}">＋ Nuevo</a>
+  </div>
+
+  <nav class="agenda-paginas" aria-label="Pasar páginas de la agenda">
+    <a class="boton boton-secundario boton-pequeno pasar-atras" href="{{ url_for('eventos.agenda', desde=anterior.isoformat()) }}"
+       aria-label="Días anteriores">‹</a>
+    {% if not es_pagina_de_hoy %}
+      <a class="boton boton-secundario boton-pequeno" href="{{ url_for('eventos.agenda') }}">Hoy</a>
+    {% endif %}
+    <span class="agenda-dias-elegir" role="group" aria-label="Días por página">
+      {% for opcion in (2, 3) %}
+        <a class="chip{% if n == opcion %} chip-activo{% endif %}"
+           href="{{ url_for('eventos.agenda', dias=opcion, desde=dias[0].fecha.isoformat() if not es_pagina_de_hoy else None) }}"
+           {% if n == opcion %}aria-current="true"{% endif %}>{{ opcion }} días</a>
+      {% endfor %}
+    </span>
+    <a class="boton boton-secundario boton-pequeno" href="{{ url_for('eventos.agenda', desde=siguiente.isoformat()) }}"
+       aria-label="Días siguientes">›</a>
+  </nav>
+
+  {# Una «página» de agenda de bolsillo: cada día con su margen y sus renglones #}
+  <div class="libreta libreta-{{ n }}">
+    {% for dia in dias %}
+      <section class="dia-libreta{% if dia.es_hoy %} dia-hoy{% endif %}{% if dia.pasado %} dia-pasado{% endif %}"
+               aria-label="{{ dia.fecha|fecha_larga }}{% if dia.es_hoy %} (hoy){% endif %}">
+        <header class="dia-margen">
+          <span class="dia-numero">{{ dia.fecha.day }}</span>
+          <span class="dia-semana">{{ dia.semana }}</span>
+          <span class="dia-mes">{{ dia.mes }}</span>
+          {% if dia.es_hoy %}<span class="dia-etiqueta">Hoy</span>{% endif %}
+          {% if dia.cucharas %}<span class="dia-cucharas" title="Cucharas de este día">{{ dia.cucharas }}🥄</span>{% endif %}
+        </header>
+        <ul class="renglones">
+          {% for e in dia.eventos %}
+            <li>
+              <a class="renglon{% if e.es_cita %} renglon-cita{% endif %}" href="{{ url_for('eventos.editar', evento_id=e.id) }}">
+                <span class="renglon-hora">{{ horario(e) }}</span>
+                <span class="renglon-titulo">{% if e.es_cita %}<span aria-hidden="true">🩺 </span><span class="solo-lectores">Cita médica: </span>{% endif %}{{ e.titulo }}</span>
+                {% if e.coste_energia %}<span class="renglon-cucharas">{{ cucharas(e.coste_energia) }}</span>{% endif %}
+              </a>
+            </li>
+          {% endfor %}
+          <li class="renglon-nuevo">
+            <a href="{{ url_for('eventos.formulario_nuevo', fecha=dia.fecha.isoformat()) }}"
+               aria-label="Añadir algo el {{ dia.fecha|fecha_larga }}">＋ Añadir</a>
+          </li>
+        </ul>
+      </section>
+    {% endfor %}
+  </div>
+{% endblock %}

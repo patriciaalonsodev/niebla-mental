@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "nutricion/_macros.html" import pestanas, grafica_peso %}
+
+{% block titulo %}Peso{% endblock %}
+
+{% block contenido %}
+  <h1>Nutrición</h1>
+  {{ pestanas("peso") }}
+
+  <form method="post" action="{{ url_for('nutricion.peso') }}" novalidate class="panel formulario-linea">
+    {{ form.hidden_tag() }}
+    <div class="campo campo-principal">{{ form.kg.label }}{{ form.kg(autocomplete="off", inputmode="decimal", placeholder="65,5") }}</div>
+    <div class="campo campo-cantidad">{{ form.fecha.label }}{{ form.fecha() }}</div>
+    <button class="boton" type="submit">Apuntar</button>
+    {% for error in form.kg.errors + form.fecha.errors %}<p class="error">{{ error }}</p>{% endfor %}
+  </form>
+
+  {% if grafica %}
+    <section class="panel">
+      <h2 class="titulo-panel">Últimos 6 meses</h2>
+      {{ grafica_peso(grafica) }}
+      <p class="ayuda">Mínimo {{ grafica.minimo|kg }} kg · máximo {{ grafica.maximo|kg }} kg.
+        El peso sube y baja de un día a otro (agua, inflamación…): mira la tendencia, no un día suelto.</p>
+    </section>
+
+    <h2 class="compra-titulo">Registros</h2>
+    <ul class="compra-filas">
+      {% for r in registros %}
+        <li class="compra-fila">
+          <span class="compra-nombre">{{ r.fecha|fecha_larga }}</span>
+          <span class="compra-cantidad">{{ r.kg|kg }} kg</span>
+          <form method="post" action="{{ url_for('nutricion.borrar_peso', registro_id=r.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="compra-quitar" type="submit" aria-label="Borrar el peso del {{ r.fecha|fecha_larga }}">✕</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="vacio">Apunta tu peso de vez en cuando y aquí verás cómo evoluciona ⚖️</p>
+  {% endif %}
+{% endblock %}

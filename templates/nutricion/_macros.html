@@ -1,0 +1,59 @@
+{# Piezas reutilizables de nutrición #}
+
+{% macro pestanas(activa) %}
+  <nav class="pestanas pestanas-5" aria-label="Apartados de nutrición">
+    {% for clave, endpoint, icono, texto in [
+         ('hoy', 'nutricion.inicio', '🍽️', 'Hoy'),
+         ('plan', 'nutricion.plan', '🎯', 'Plan'),
+         ('alimentos', 'nutricion.alimentos', '🥫', 'Alimentos'),
+         ('peso', 'nutricion.peso', '⚖️', 'Peso'),
+         ('recetas', 'nutricion.recetas', '✨', 'Recetas'),
+       ] %}
+      <a class="pestana{% if activa == clave %} pestana-activa{% endif %}" href="{{ url_for(endpoint) }}"
+         {% if activa == clave %}aria-current="page"{% endif %}>
+        <span aria-hidden="true">{{ icono }}</span><span class="pestana-texto">{{ texto }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+{% endmacro %}
+
+{# Gráfica pequeña de peso (SVG hecho a mano, sin librerías) #}
+{% macro grafica_peso(g, titulo="Evolución del peso") %}
+  {% if g %}
+    <figure class="grafica-peso">
+      <svg viewBox="0 0 {{ g.ancho }} {{ g.alto }}" role="img"
+           aria-label="{{ titulo }}: de {{ g.primero.kg|kg }} kg el {{ g.primero.fecha|fecha_larga }} a {{ g.ultimo.kg|kg }} kg el {{ g.ultimo.fecha|fecha_larga }}">
+        <polyline points="{{ g.linea }}" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linejoin="round" stroke-linecap="round"/>
+        {% for x, y, r in g.puntos %}
+          <circle cx="{{ x }}" cy="{{ y }}" r="{{ 4 if loop.last else 2.5 }}"><title>{{ r.fecha|fecha_corta }}: {{ r.kg|kg }} kg</title></circle>
+        {% endfor %}
+      </svg>
+      <figcaption>
+        <strong>{{ g.ultimo.kg|kg }} kg</strong>
+        {% if g.puntos|length > 1 %}
+          <span class="{{ 'baja' if g.diferencia < 0 else 'sube' if g.diferencia > 0 else '' }}">
+            {{ '▼' if g.diferencia < 0 else '▲' if g.diferencia > 0 else '=' }} {{ g.diferencia|abs|kg }} kg desde el {{ g.primero.fecha|fecha_corta }}
+          </span>
+        {% endif %}
+      </figcaption>
+    </figure>
+  {% endif %}
+{% endmacro %}
+
+{% macro barra_macro(b) %}
+  <div class="barra-macro{% if b.pasado %} barra-pasada{% endif %}">
+    <div class="barra-texto">
+      <span>{{ b.nombre }}</span>
+      <span>
+        <strong>{{ b.llevas|round|int }}</strong>{% if b.meta %} / {{ b.meta }}{% endif %} {{ b.unidad }}
+      </span>
+    </div>
+    {% if b.meta %}
+      <div class="barra-fondo" role="progressbar" aria-label="{{ b.nombre }}" aria-valuemin="0"
+           aria-valuemax="{{ b.meta }}" aria-valuenow="{{ b.llevas|round|int }}">
+        <div class="barra-relleno" style="width: {{ b.por_ciento }}%"></div>
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}

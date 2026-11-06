@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "tareas/_macros.html" import formulario_tarea, fila_tarea %}
+
+{% block titulo %}Tareas{% endblock %}
+
+{% block contenido %}
+  <div class="cabecera-seccion">
+    <div>
+      <h1>Tareas</h1>
+      <p class="subtitulo">Una cosa cada vez. Lo que no dé tiempo, pasa a mañana.</p>
+    </div>
+    {% if cucharas_hoy %}
+      <p class="resumen-cucharas">
+        Hoy: <strong>{{ cucharas_hoy }}</strong> 🥄
+      </p>
+    {% endif %}
+  </div>
+
+  <section class="panel">
+    <h2 class="titulo-panel">Nueva tarea</h2>
+    {{ formulario_tarea(form, url_for('tareas.nueva'), "Apuntar tarea") }}
+  </section>
+
+  {% set titulos = {
+    "anteriores": "De días anteriores",
+    "hoy": "Hoy",
+    "proximas": "Próximos días",
+    "sin_fecha": "Cuando puedas",
+  } %}
+
+  {% set hay_pendientes = grupos.values()|map('length')|sum %}
+  {% if not hay_pendientes %}
+    <p class="vacio">No tienes tareas pendientes. ¡A descansar! 💜</p>
+  {% endif %}
+
+  {% for clave, titulo in titulos.items() if grupos[clave] %}
+    <section class="grupo-tareas">
+      <h2>{{ titulo }} <span class="contador">{{ grupos[clave]|length }}</span></h2>
+      <ul class="lista-tareas">
+        {% for tarea in grupos[clave] %}{{ fila_tarea(tarea, hoy) }}{% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+
+  {% if completadas %}
+    <details class="grupo-tareas hechas">
+      <summary><h2>Hechas <span class="contador">{{ completadas|length }}</span></h2></summary>
+      <ul class="lista-tareas">
+        {% for tarea in completadas %}{{ fila_tarea(tarea, hoy) }}{% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "salud/_pestanas.html" import pestanas %}
+{% from "cuerpo/_macros.html" import barras, aviso_reloj %}
+
+{% block titulo %}Actividad{% endblock %}
+
+{% block contenido %}
+  <h1>Salud</h1>
+  {{ pestanas("actividad") }}
+
+  {# Hoy: los pasos en grande #}
+  <section class="panel pasos-hoy" aria-label="Pasos de hoy">
+    <div class="anillo" style="--progreso: {{ por_ciento }}" role="img"
+         aria-label="{{ pasos_hoy }} pasos de {{ objetivo }} ({{ por_ciento }} %)">
+      <div class="anillo-centro">
+        <strong>{{ pasos_hoy|miles }}</strong>
+        <span>de {{ objetivo|miles }} pasos</span>
+      </div>
+    </div>
+    <div class="pasos-datos">
+      {% if de_hoy %}
+        {% if de_hoy.minutos_activos %}<p>⏱️ <strong>{{ de_hoy.minutos_activos }}</strong> min en movimiento</p>{% endif %}
+        {% if de_hoy.kcal_activas %}<p>🔥 <strong>{{ de_hoy.kcal_activas }}</strong> kcal gastadas</p>{% endif %}
+        {% if de_hoy.distancia_km %}<p>📍 <strong>{{ de_hoy.distancia_km|kg }}</strong> km</p>{% endif %}
+        <p>{{ aviso_reloj(de_hoy.origen) }}</p>
+      {% else %}
+        <p class="ayuda">Aún no hay pasos de hoy. Apúntalos abajo o conecta tu reloj desde el Perfil.</p>
+      {% endif %}
+      {% if pasos_hoy >= objetivo %}<p class="logro">🎉 ¡Objetivo cumplido!</p>{% endif %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="titulo-panel">Esta semana <span class="ayuda">· media {{ media|miles }} pasos/día</span></h2>
+    {{ barras(grafica, "pasos", "Pasos de los últimos 7 días") }}
+    <p class="ayuda">La línea marca tu objetivo. En días de brote, cualquier paso cuenta 💜</p>
+  </section>
+
+  {# Ejercicio #}
+  <section class="grupo-tareas">
+    <h2>Ejercicio <span class="contador">{{ minutos_ejercicio_semana }} min esta semana</span></h2>
+    {% if ejercicios %}
+      <ul class="compra-filas">
+        {% for e in ejercicios %}
+          <li class="compra-fila">
+            <span class="compra-nombre">{{ ['', '🌱', '🌿', '🔥'][e.intensidad or 0] }} {{ e.tipo }}
+              <span class="ayuda">· {{ e.fecha|fecha_corta }}</span></span>
+            <span class="compra-cantidad">{{ e.minutos }} min{% if e.kcal %} · {{ e.kcal }} kcal{% endif %}</span>
+            <form method="post" action="{{ url_for('cuerpo.borrar_ejercicio', ejercicio_id=e.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="compra-quitar" type="submit" aria-label="Borrar {{ e.tipo }}">✕</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <details class="panel panel-plegable" {% if form_ejercicio.errors %}open{% endif %}>
+      <summary class="titulo-panel">＋ Apuntar ejercicio</summary>
+      <form method="post" action="{{ url_for('cuerpo.nuevo_ejercicio') }}" novalidate class="formulario">
+        {{ form_ejercicio.hidden_tag() }}
+        {{ campo(form_ejercicio.tipo, autocomplete="off") }}
+        <div class="chips-productos" aria-label="Ideas">
+          {% for t in tipos %}<button type="button" class="chip chip-producto" data-tipo="{{ t }}">{{ t }}</button>{% endfor %}
+        </div>
+        <div class="campos-fila campos-fila-2">
+          {{ campo(form_ejercicio.minutos, autocomplete="off") }}
+          {{ campo(form_ejercicio.kcal, autocomplete="off") }}
+        </div>
+        <fieldset class="campo selector-cucharas selector-tipo">
+          <legend>{{ form_ejercicio.intensidad.label.text }}</legend>
+          <div class="opciones-cucharas opciones-3">
+            {% for opcion in form_ejercicio.intensidad %}<label class="opcion-cuchara">{{ opcion() }}<span>{{ opcion.label.text }}</span></label>{% endfor %}
+          </div>
+        </fieldset>
+        {{ campo(form_ejercicio.fecha) }}
+        <button class="boton boton-ancho" type="submit">Apuntar ejercicio</button>
+      </form>
+    </details>
+  </section>
+
+  <details class="panel panel-plegable" {% if form.errors %}open{% endif %}>
+    <summary class="titulo-panel">✍️ Apuntar pasos a mano</summary>
+    <form method="post" action="{{ url_for('cuerpo.guardar_actividad_manual') }}" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.fecha) }}
+      <div class="campos-fila campos-fila-2">
+        {{ campo(form.pasos, autocomplete="off") }}
+        {{ campo(form.minutos_activos, autocomplete="off") }}
+        {{ campo(form.kcal_activas, autocomplete="off") }}
+        {{ campo(form.distancia_km, autocomplete="off") }}
+      </div>
+      <button class="boton boton-ancho" type="submit">Guardar</button>
+    </form>
+  </details>
+
+  <details class="panel panel-plegable">
+    <summary class="titulo-panel">🎯 Cambiar mi objetivo</summary>
+    <form method="post" action="{{ url_for('cuerpo.objetivo_pasos') }}" novalidate class="formulario">
+      {{ form_objetivo.hidden_tag() }}
+      {{ campo(form_objetivo.objetivo_pasos, autocomplete="off") }}
+      <button class="boton boton-secundario boton-ancho" type="submit">Guardar objetivo</button>
+    </form>
+  </details>
+
+  <script>
+    // Tocar una idea rellena «¿Qué has hecho?»
+    document.querySelectorAll("[data-tipo]").forEach((b) => b.addEventListener("click", () => {
+      const campo = document.getElementById("{{ form_ejercicio.tipo.id }}");
+      campo.value = b.dataset.tipo;
+      document.getElementById("{{ form_ejercicio.minutos.id }}").focus();
+    }));
+  </script>
+{% endblock %}

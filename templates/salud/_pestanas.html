@@ -1,0 +1,16 @@
+{# Pestañas de la sección de salud #}
+{% macro pestanas(activa) %}
+  <nav class="pestanas pestanas-5" aria-label="Apartados de salud">
+    {% for clave, endpoint, icono, texto in [
+         ('sintomas', 'salud.inicio', '📋', 'Síntomas'),
+         ('medicacion', 'medicacion.inicio', '💊', 'Medicación'),
+         ('actividad', 'cuerpo.actividad', '👟', 'Actividad'),
+         ('sueno', 'cuerpo.sueno', '😴', 'Sueño'),
+       ] %}
+      <a class="pestana{% if activa == clave %} pestana-activa{% endif %}" href="{{ url_for(endpoint) }}"
+         {% if activa == clave %}aria-current="page"{% endif %}>
+        <span aria-hidden="true">{{ icono }}</span><span class="pestana-texto">{{ texto }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+{% endmacro %}

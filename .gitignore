@@ -1,0 +1,18 @@
+# Secretos y datos: NUNCA al repositorio
+.env
+instance/
+*.db
+*.sqlite3
+
+# Entorno y cachés de Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editores y herramientas locales
+.idea/
+.vscode/
+.claude/settings.local.json
+.DS_Store
+Thumbs.db

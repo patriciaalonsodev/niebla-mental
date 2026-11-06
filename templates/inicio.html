@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+  <h1>Hola, {{ current_user.nombre }} 💜</h1>
+  <p class="subtitulo">Todo lo que no quieres olvidar, en un solo sitio.</p>
+
+  {% if tomas_pendientes %}
+    {% from "medicacion/_macros.html" import fila_programada %}
+    <section class="aviso-tomas" aria-labelledby="titulo-tomas">
+      <h2 id="titulo-tomas" class="titulo-panel">⏰ Te toca la medicación</h2>
+      <ul class="lista-tareas">
+        {% for p in tomas_pendientes %}{{ fila_programada(p, volver=url_for('inicio')) }}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {# Captura rápida: se guarda en la bandeja y se ordena después #}
+  {% from "captura/_macros.html" import formulario_apunte %}
+  <section class="panel captura" aria-labelledby="titulo-captura">
+    <h2 id="titulo-captura" class="titulo-panel">＋ Apuntar algo</h2>
+    {{ formulario_apunte(form_apunte, volver=url_for('inicio')) }}
+    {% if num_apuntes %}
+      <p class="captura-pendientes">
+        <a href="{{ url_for('captura.bandeja') }}">📥 Tienes {{ num_apuntes }}
+          {{ 'apunte' if num_apuntes == 1 else 'apuntes' }} sin ordenar →</a>
+      </p>
+    {% endif %}
+  </section>
+
+  {% if proximos %}
+    {% from "eventos/_macros.html" import fila_evento %}
+    <section class="resumen-agenda" aria-label="Agenda de hoy y mañana">
+      {% for nombre, eventos in proximos %}
+        <h2 class="titulo-panel">📅 {{ nombre }}</h2>
+        <ul class="lista-tareas">{% for e in eventos %}{{ fila_evento(e) }}{% endfor %}</ul>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <div class="acciones">
+    {# Se activa en la fase 6 #}
+    <button class="boton boton-secundario" type="button" disabled title="Próximamente">🌧️ Modo día malo</button>
+  </div>
+
+  <ul class="secciones">
+    {% for seccion in secciones %}
+      <li>
+        {% if seccion.endpoint %}
+          <a class="tarjeta" href="{{ url_for(seccion.endpoint) }}">
+        {% else %}
+          <div class="tarjeta">
+        {% endif %}
+          <span class="tarjeta-icono" aria-hidden="true">{{ seccion.icono }}</span>
+          <span class="tarjeta-titulo">{{ seccion.titulo }}</span>
+          <span class="tarjeta-texto">{{ seccion.texto }}</span>
+        {% if seccion.endpoint %}
+          </a>
+        {% else %}
+            <span class="etiqueta-pronto">Próximamente</span>
+          </div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

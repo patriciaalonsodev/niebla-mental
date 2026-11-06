@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "nutricion/_macros.html" import pestanas %}
+
+{% macro opciones(field) %}
+  <fieldset class="campo selector-cucharas selector-tipo">
+    <legend>{{ field.label.text }}</legend>
+    <div class="opciones-cucharas opciones-{{ field.choices|length }}">
+      {% for opcion in field %}
+        <label class="opcion-cuchara">{{ opcion() }}<span>{{ opcion.label.text }}</span></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+{% endmacro %}
+
+{% block titulo %}Tu plan{% endblock %}
+
+{% block contenido %}
+  <h1>Nutrición</h1>
+  {{ pestanas("plan") }}
+
+  {% if plan.kcal %}
+    <section class="panel plan-resumen" aria-label="Tu plan diario">
+      <div><strong>{{ plan.kcal }}</strong><span>kcal</span></div>
+      <div><strong>{{ plan.proteinas_g }} g</strong><span>proteínas</span></div>
+      <div><strong>{{ plan.hidratos_g }} g</strong><span>hidratos</span></div>
+      <div><strong>{{ plan.grasas_g }} g</strong><span>grasas</span></div>
+    </section>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('nutricion.plan') }}" novalidate class="formulario">
+    {{ form.hidden_tag() }}
+    <section class="panel">
+      <h2 class="titulo-panel">📏 Tus datos</h2>
+      {{ opciones(form.sexo) }}
+      <div class="campos-fila campos-fila-3">
+        {{ campo(form.edad, autocomplete="off") }}
+        {{ campo(form.altura_cm, autocomplete="off") }}
+        {{ campo(form.peso, autocomplete="off") }}
+      </div>
+      {{ campo(form.actividad) }}
+      {{ opciones(form.objetivo) }}
+      <button class="boton boton-ancho" type="submit" name="accion" value="calcular">🧮 Calcular mi plan</button>
+      {% if calculo %}
+        <p class="ayuda">Tu cuerpo gasta unas <strong>{{ calculo.basal }} kcal</strong> en reposo
+          (fórmula de Mifflin-St Jeor). Recomendado para ti: {{ calculo.kcal }} kcal ·
+          {{ calculo.proteinas_g }} g de proteínas · {{ calculo.hidratos_g }} g de hidratos · {{ calculo.grasas_g }} g de grasas.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <h2 class="titulo-panel">🎯 Ajustar a mano</h2>
+      <p class="ayuda">Si tu nutricionista te ha dado otras cifras, ponlas aquí.</p>
+      <div class="campos-fila campos-fila-2">
+        {{ campo(form.kcal, autocomplete="off") }}
+        {{ campo(form.proteinas_g, autocomplete="off") }}
+        {{ campo(form.hidratos_g, autocomplete="off") }}
+        {{ campo(form.grasas_g, autocomplete="off") }}
+      </div>
+      <button class="boton boton-secundario boton-ancho" type="submit" name="accion" value="guardar">Guardar estas cifras</button>
+    </section>
+  </form>
+
+  <p class="ayuda aviso-salud">⚠️ Es una estimación orientativa. Con fibromialgia u otras condiciones de salud,
+    lo ideal es que tu médica o nutricionista revise tu plan.</p>
+{% endblock %}

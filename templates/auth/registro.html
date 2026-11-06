@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo, casilla %}
+
+{% block titulo %}Crear cuenta{% endblock %}
+
+{% block contenido %}
+  <section class="panel-formulario">
+    <h1>Crear cuenta</h1>
+    <p class="subtitulo">Solo te llevará un minuto.</p>
+
+    <form method="post" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.nombre, autocomplete="given-name", autofocus=True) }}
+      {{ campo(form.email, autocomplete="email") }}
+      {{ campo(form.password, autocomplete="new-password") }}
+      {{ campo(form.password2, autocomplete="new-password") }}
+
+      {% call casilla(form.acepta_privacidad) %}
+        He leído y acepto la <a href="{{ url_for('privacidad') }}" target="_blank">política de privacidad</a>
+      {% endcall %}
+      {{ casilla(form.consiente_salud) }}
+
+      <button class="boton boton-ancho" type="submit">Crear mi cuenta</button>
+    </form>
+
+    <p class="pie-formulario">¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}">Inicia sesión</a></p>
+  </section>
+{% endblock %}

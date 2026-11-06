@@ -1,0 +1,69 @@
+{# Piezas reutilizables de medicación #}
+{% from "_campos.html" import campo %}
+
+{% macro nombre_med(med) -%}
+  <span class="tarea-titulo">{{ med.nombre }}</span>
+  {%- if med.dosis %} <span class="med-dosis">{{ med.dosis }}</span>{% endif %}
+{%- endmacro %}
+
+{# Botones para marcar una toma programada. volver: a dónde ir después #}
+{% macro botones_toma(p, volver=None) %}
+  {% set hora = p.hora.strftime('%H:%M') %}
+  {% if p.toma %}
+    <form method="post" action="{{ url_for('medicacion.deshacer', toma_id=p.toma.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if volver %}<input type="hidden" name="volver" value="{{ volver }}">{% endif %}
+      <button class="boton-icono" type="submit" title="Deshacer" aria-label="Deshacer: {{ p.medicamento.nombre }} de las {{ hora }}">↩</button>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('medicacion.tomar', med_id=p.medicamento.id) }}" class="botones-toma">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="hora" value="{{ hora }}">
+      {% if volver %}<input type="hidden" name="volver" value="{{ volver }}">{% endif %}
+      <button class="boton boton-pequeno" type="submit" name="estado" value="tomada"
+              aria-label="Tomada: {{ p.medicamento.nombre }} de las {{ hora }}">✓ Tomada</button>
+      <button class="boton boton-secundario boton-pequeno" type="submit" name="estado" value="saltada"
+              aria-label="Saltar: {{ p.medicamento.nombre }} de las {{ hora }}" title="Hoy no la tomo">Saltar</button>
+    </form>
+  {% endif %}
+{% endmacro %}
+
+{% macro fila_programada(p, volver=None) %}
+  <li class="tarea toma toma-{{ p.estado }}">
+    <span class="toma-hora">{{ p.hora.strftime('%H:%M') }}</span>
+    <span class="tarea-cuerpo">
+      <span>{{ nombre_med(p.medicamento) }}</span>
+      <span class="tarea-meta">
+        {%- if p.estado == 'tomada' %}✓ Tomada
+        {%- elif p.estado == 'saltada' %}Saltada
+        {%- elif p.estado == 'toca' %}⏰ Te toca
+        {%- endif %}
+        {%- if p.medicamento.instrucciones %}{% if p.estado != 'pronto' %} · {% endif %}{{ p.medicamento.instrucciones }}{% endif -%}
+      </span>
+    </span>
+    {{ botones_toma(p, volver) }}
+  </li>
+{% endmacro %}
+
+{% macro formulario_medicamento(form, accion, texto_boton) %}
+  <form method="post" action="{{ accion }}" novalidate class="formulario">
+    {{ form.hidden_tag() }}
+    {{ campo(form.nombre, autocomplete="off") }}
+    {{ campo(form.dosis, autocomplete="off") }}
+    <fieldset class="campo horas-toma">
+      <legend>¿A qué horas lo tomas?</legend>
+      <div class="horas-lista">
+        {% for hora in form.horas %}
+          <div class="hora-campo">
+            <label class="solo-lectores" for="{{ hora.id }}">Hora {{ loop.index }}</label>
+            {{ hora() }}
+          </div>
+        {% endfor %}
+      </div>
+      <p class="ayuda">Hasta {{ form.horas|length }} horas. Déjalas vacías si lo tomas solo cuando lo necesitas.</p>
+      {% for hora in form.horas %}{% for error in hora.errors %}<p class="error">Hora {{ loop.index }}: {{ error }}</p>{% endfor %}{% endfor %}
+    </fieldset>
+    {{ campo(form.instrucciones, autocomplete="off") }}
+    <button class="boton boton-ancho" type="submit">{{ texto_boton }}</button>
+  </form>
+{% endmacro %}

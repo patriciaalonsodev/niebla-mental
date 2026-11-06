@@ -1,0 +1,62 @@
+{# Piezas reutilizables de la sección de tareas #}
+{% from "_campos.html" import campo %}
+
+{% macro cucharas(n) -%}
+  {%- if n -%}
+    <span class="cucharas" title="{{ n }} cuchara{{ 's' if n != 1 }}" aria-label="{{ n }} cuchara{{ 's' if n != 1 }}">
+      {%- for _ in range(n) %}🥄{% endfor -%}
+    </span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro selector_cucharas(field) %}
+  <fieldset class="campo selector-cucharas">
+    <legend>{{ field.label.text }}</legend>
+    <div class="opciones-cucharas">
+      {% for opcion in field %}
+        <label class="opcion-cuchara">
+          {{ opcion() }}
+          <span>{% if opcion.data %}{{ opcion.label.text }} 🥄{% else %}—{% endif %}</span>
+        </label>
+      {% endfor %}
+    </div>
+    <p class="ayuda">1 = casi nada · 5 = te deja agotada</p>
+  </fieldset>
+{% endmacro %}
+
+{% macro formulario_tarea(form, accion, texto_boton) %}
+  <form method="post" action="{{ accion }}" novalidate class="formulario">
+    {{ form.hidden_tag() }}
+    {{ campo(form.titulo, autocomplete="off") }}
+    {{ campo(form.fecha) }}
+    {{ selector_cucharas(form.coste_energia) }}
+    <details class="mas-opciones" {% if form.notas.data %}open{% endif %}>
+      <summary>Añadir notas</summary>
+      {{ campo(form.notas) }}
+    </details>
+    <button class="boton boton-ancho" type="submit">{{ texto_boton }}</button>
+  </form>
+{% endmacro %}
+
+{% macro fila_tarea(tarea, hoy) %}
+  <li class="tarea{% if tarea.completada %} tarea-hecha{% endif %}">
+    <form method="post" action="{{ url_for('tareas.completar', tarea_id=tarea.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="boton-check" type="submit"
+              aria-label="{{ 'Marcar como pendiente' if tarea.completada else 'Marcar como hecha' }}: {{ tarea.titulo }}">
+        <span aria-hidden="true">{{ '✓' if tarea.completada else '' }}</span>
+      </button>
+    </form>
+
+    <a class="tarea-cuerpo" href="{{ url_for('tareas.editar', tarea_id=tarea.id) }}">
+      <span class="tarea-titulo">{{ tarea.titulo }}</span>
+      <span class="tarea-meta">
+        {% if tarea.fecha and tarea.fecha != hoy %}
+          <span>📅 {{ tarea.fecha.strftime('%d/%m') }}</span>
+        {% endif %}
+        {{ cucharas(tarea.coste_energia) }}
+        {% if tarea.notas %}<span aria-label="Tiene notas">📝</span>{% endif %}
+      </span>
+    </a>
+  </li>
+{% endmacro %}

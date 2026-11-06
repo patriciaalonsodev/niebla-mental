@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "salud/_pestanas.html" import pestanas %}
+{% from "medicacion/_macros.html" import fila_programada, formulario_medicamento, nombre_med %}
+
+{% block titulo %}Medicación{% endblock %}
+
+{% block contenido %}
+  <h1>Salud</h1>
+  {{ pestanas("medicacion") }}
+
+  <section class="grupo-tareas">
+    <h2>Hoy, {{ hoy|fecha_larga }}</h2>
+    {% if programadas %}
+      <ul class="lista-tareas">{% for p in programadas %}{{ fila_programada(p) }}{% endfor %}</ul>
+    {% elif not a_demanda %}
+      <p class="vacio">Aún no tienes medicamentos apuntados. Añade el primero aquí abajo 💊</p>
+    {% endif %}
+
+    {% if a_demanda %}
+      <h3 class="subgrupo">Cuando lo necesites</h3>
+      <ul class="lista-tareas">
+        {% for d in a_demanda %}
+          <li class="tarea toma">
+            <span class="tarea-cuerpo">
+              <span>{{ nombre_med(d.medicamento) }}</span>
+              <span class="tarea-meta">
+                {%- if d.tomas %}Hoy: {{ d.tomas|length }} {{ 'vez' if d.tomas|length == 1 else 'veces' }}
+                  (última a las {{ d.tomas[-1].registrada_en|hora_local }})
+                {%- else %}Hoy no lo has tomado{% endif -%}
+                {%- if d.medicamento.instrucciones %} · {{ d.medicamento.instrucciones }}{% endif -%}
+              </span>
+            </span>
+            {% if d.tomas %}
+              <form method="post" action="{{ url_for('medicacion.deshacer', toma_id=d.tomas[-1].id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="boton-icono" type="submit" title="Deshacer la última" aria-label="Deshacer la última toma de {{ d.medicamento.nombre }}">↩</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('medicacion.tomar', med_id=d.medicamento.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="boton boton-pequeno" type="submit" aria-label="Apuntar que he tomado {{ d.medicamento.nombre }}">＋ Tomada</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+
+  {# Lo muestra avisos.js solo si el navegador admite notificaciones #}
+  <section class="panel" id="panel-avisos" hidden>
+    <h2 class="titulo-panel">⏰ Recordatorios</h2>
+    <p class="ayuda" id="estado-avisos"></p>
+    <button class="boton boton-secundario" type="button" id="activar-avisos">Activar avisos en este dispositivo</button>
+  </section>
+
+  <details class="panel panel-plegable" {% if form.errors or not medicamentos %}open{% endif %}>
+    <summary class="titulo-panel">＋ Añadir medicamento</summary>
+    {{ formulario_medicamento(form, url_for('medicacion.nuevo'), "Guardar medicamento") }}
+  </details>
+
+  {% if medicamentos %}
+    <section class="grupo-tareas">
+      <h2>Tus medicamentos <span class="contador">{{ medicamentos|length }}</span></h2>
+      <ul class="lista-tareas">
+        {% for med in medicamentos %}
+          <li class="tarea{% if not med.activo %} tarea-hecha{% endif %}">
+            <a class="tarea-cuerpo" href="{{ url_for('medicacion.editar', med_id=med.id) }}">
+              <span>{{ nombre_med(med) }}</span>
+              <span class="tarea-meta">
+                {%- if not med.activo %}En pausa · {% endif -%}
+                {%- if med.a_demanda %}Cuando lo necesites
+                {%- else %}{% for h in med.horas %}{{ h.hora.strftime('%H:%M') }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif -%}
+              </span>
+            </a>
+            <form method="post" action="{{ url_for('medicacion.pausar', med_id=med.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="boton boton-secundario boton-pequeno" type="submit"
+                      aria-label="{{ 'Reanudar' if not med.activo else 'Pausar' }}: {{ med.nombre }}">{{ 'Reanudar' if not med.activo else 'Pausar' }}</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}

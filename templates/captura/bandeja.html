@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "captura/_macros.html" import formulario_apunte %}
+
+{% block titulo %}Apuntar{% endblock %}
+
+{% block contenido %}
+  <h1>Apuntar algo</h1>
+  <p class="subtitulo">Suéltalo aquí y sigue con lo tuyo. Ya lo ordenarás cuando tengas energía.</p>
+
+  <section class="panel captura">
+    {{ formulario_apunte(form, autofocus=True) }}
+  </section>
+
+  {% if apuntes %}
+    <section class="grupo-tareas">
+      <h2>Sin ordenar <span class="contador">{{ apuntes|length }}</span></h2>
+      <ul class="lista-apuntes">
+        {% for apunte in apuntes %}
+          <li class="apunte">
+            <p class="apunte-texto">{{ apunte.texto }}</p>
+            <div class="apunte-acciones" role="group" aria-label="Qué hacer con este apunte">
+              {% for endpoint, texto, etiqueta in [
+                   ('captura.a_tarea', '✅ Tarea', 'Convertir en tarea'),
+                   ('captura.a_nota', '📝 Nota', 'Convertir en nota'),
+                   ('captura.a_compra', '🛒 Compra', 'Pasar a la lista de la compra'),
+                 ] %}
+                <form method="post" action="{{ url_for(endpoint, apunte_id=apunte.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="boton boton-secundario boton-pequeno" type="submit" title="{{ etiqueta }}">{{ texto }}</button>
+                </form>
+              {% endfor %}
+              <form method="post" action="{{ url_for('captura.borrar', apunte_id=apunte.id) }}"
+                    onsubmit="return confirm('¿Borrar este apunte?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="boton-icono" type="submit" aria-label="Borrar apunte" title="Borrar">✕</button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="ayuda">En «Compra», cada línea se convierte en un producto.</p>
+    </section>
+  {% else %}
+    <p class="vacio">La bandeja está vacía. Todo en su sitio 💜</p>
+  {% endif %}
+{% endblock %}

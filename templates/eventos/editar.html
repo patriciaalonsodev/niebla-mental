@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "eventos/_macros.html" import formulario_evento %}
+
+{% block titulo %}{{ "Cita médica" if evento.es_cita else "Evento" }}{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a class="pasar-atras" href="{{ url_for('eventos.agenda', desde=evento.fecha.isoformat()) }}">← Agenda</a></p>
+
+  {% if evento.es_cita and evento.lista_preguntas() and not ya_paso %}
+    {# Chuleta para la consulta: grande y fácil de leer en el móvil #}
+    <section class="panel chuleta" aria-labelledby="titulo-chuleta">
+      <h2 id="titulo-chuleta" class="titulo-panel">❓ Para preguntar en la consulta</h2>
+      <ol class="lista-preguntas">
+        {% for pregunta in evento.lista_preguntas() %}<li>{{ pregunta }}</li>{% endfor %}
+      </ol>
+    </section>
+  {% endif %}
+
+  <section class="panel">
+    <h1>{{ "Cita médica" if evento.es_cita else "Evento" }}</h1>
+    {% if evento.es_cita and ya_paso and not evento.resumen %}
+      <p class="aviso aviso-info">Esta cita ya pasó. Apunta abajo qué te dijeron, ahora que lo recuerdas 💜</p>
+    {% endif %}
+    {{ formulario_evento(form, url_for('eventos.editar', evento_id=evento.id), "Guardar cambios") }}
+  </section>
+
+  <form method="post" action="{{ url_for('eventos.borrar', evento_id=evento.id) }}" class="zona-borrar"
+        onsubmit="return confirm('¿Borrar esto de la agenda?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="boton boton-peligro" type="submit">🗑️ Borrar</button>
+  </form>
+{% endblock %}

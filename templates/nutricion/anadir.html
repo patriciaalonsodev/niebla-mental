@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo, casilla %}
+
+{% block titulo %}Apuntar comida{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a href="{{ url_for('nutricion.inicio', fecha=form.fecha.data.isoformat() if form.fecha.data else None) }}">← Nutrición</a></p>
+
+  <section class="panel">
+    <h1>Apuntar comida</h1>
+    <form method="post" action="{{ url_for('nutricion.anadir') }}" novalidate class="formulario formulario-comida">
+      {{ form.hidden_tag() }}
+      {{ campo(form.momento) }}
+      {{ campo(form.fecha) }}
+
+      {% if alimentos %}
+        {{ campo(form.alimento) }}
+      {% endif %}
+      {{ campo(form.gramos, autocomplete="off") }}
+
+      {# Solo hace falta si no se elige uno de «mis alimentos» #}
+      <fieldset class="a-mano">
+        <legend>Escribirlo a mano <span class="ayuda">(los valores de lo que has comido)</span></legend>
+        {{ campo(form.nombre, autocomplete="off") }}
+        <div class="campos-fila campos-fila-2">
+          {{ campo(form.kcal, autocomplete="off") }}
+          {{ campo(form.proteinas, autocomplete="off") }}
+          {{ campo(form.hidratos, autocomplete="off") }}
+          {{ campo(form.grasas, autocomplete="off") }}
+        </div>
+        {{ casilla(form.guardar_alimento) }}
+      </fieldset>
+
+      <button class="boton boton-ancho" type="submit">Apuntar</button>
+    </form>
+    {% if not alimentos %}
+      <p class="ayuda">💡 Si guardas tus alimentos habituales en <a href="{{ url_for('nutricion.alimentos') }}">Alimentos</a>,
+        luego solo tendrás que elegirlos y poner los gramos.</p>
+    {% endif %}
+  </section>
+{% endblock %}

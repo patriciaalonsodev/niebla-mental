@@ -1,0 +1,65 @@
+/* ══════════════════════════════════════════════════════════════
+   App de organización · static/css/libro.css
+   Al pasar de página (diario y agenda), la hoja se dobla desde la
+   esquina inferior derecha (ver libro.js). La cabecera y la barra
+   de iconos quedan quietas: solo se pasa la hoja.
+   Basado en el libro.css de pz-verse.com, de Patz.
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  @view-transition { navigation: auto; }
+
+  :root { --pasar-hoja: 1100ms; }
+
+  /* Lo que no se mueve al pasar la hoja */
+  .cabecera   { view-transition-name: libro-cabecera; }
+  .navegacion { view-transition-name: libro-barra; }
+
+  ::view-transition-group(libro-cabecera),
+  ::view-transition-group(libro-barra),
+  ::view-transition-old(libro-cabecera),
+  ::view-transition-new(libro-cabecera),
+  ::view-transition-old(libro-barra),
+  ::view-transition-new(libro-barra) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  :root.libro-activo::view-transition-group(root) { animation-duration: var(--pasar-hoja); }
+  :root.libro-activo::view-transition-image-pair(root) { isolation: auto; }
+
+  :root.libro-activo::view-transition-old(root),
+  :root.libro-activo::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Adelante: la página que se va queda ENCIMA y se dobla */
+  :root.libro-activo::view-transition-old(root) { z-index: 2; }
+  :root.libro-activo::view-transition-new(root) { z-index: 1; }
+
+  /* Atrás: la página a la que vuelves se despliega ENCIMA */
+  :root.libro-activo.libro-atras::view-transition-old(root) { z-index: 1; }
+  :root.libro-activo.libro-atras::view-transition-new(root) { z-index: 2; }
+
+  /* El reverso de la hoja doblada (lo dibuja libro.js) */
+  :root.libro-activo::view-transition-group(libro-hoja),
+  :root.libro-activo::view-transition-old(libro-hoja),
+  :root.libro-activo::view-transition-new(libro-hoja) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  #libro-hoja {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    pointer-events: none;
+    view-transition-name: libro-hoja;
+    filter: drop-shadow(-5px -4px 9px rgba(0, 0, 0, .45));
+  }
+  #libro-hoja .pliegue { position: absolute; inset: 0; }
+
+  @media (max-width: 800px) { :root { --pasar-hoja: 800ms; } }
+}

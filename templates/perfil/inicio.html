@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+
+{% block titulo %}Perfil{% endblock %}
+
+{% block contenido %}
+  <section class="perfil-cabecera">
+    {% if current_user.foto %}
+      <img class="avatar avatar-grande" src="{{ url_for('perfil.foto', v=current_user.foto_version) }}" alt="Tu foto de perfil">
+    {% else %}
+      <span class="avatar avatar-grande avatar-inicial" aria-hidden="true">{{ current_user.nombre[:1]|upper }}</span>
+    {% endif %}
+    <div>
+      <h1>{{ current_user.nombre }}</h1>
+      <p class="subtitulo">{{ current_user.email }}</p>
+    </div>
+  </section>
+
+  <div class="perfil-foto-acciones">
+    <form method="post" action="{{ url_for('perfil.subir_foto') }}" enctype="multipart/form-data" id="form-foto">
+      {{ form_foto.hidden_tag() }}
+      <label class="boton boton-secundario boton-pequeno" for="{{ form_foto.foto.id }}">
+        📷 {{ "Cambiar foto" if current_user.foto else "Poner foto" }}
+      </label>
+      {{ form_foto.foto(accept="image/*", class="solo-lectores") }}
+      <noscript><button class="boton boton-pequeno" type="submit">Subir</button></noscript>
+    </form>
+    {% if current_user.foto %}
+      <form method="post" action="{{ url_for('perfil.quitar_foto') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario boton-pequeno" type="submit">Quitar foto</button>
+      </form>
+    {% endif %}
+  </div>
+  <script>
+    // Al elegir la foto se sube sola, sin otro botón
+    document.getElementById("{{ form_foto.foto.id }}").addEventListener("change", (e) => {
+      if (e.target.files.length) e.target.form.submit();
+    });
+  </script>
+
+  <section class="panel" aria-labelledby="titulo-datos">
+    <h2 id="titulo-datos" class="titulo-panel">👤 Tus datos</h2>
+    <form method="post" action="{{ url_for('perfil.guardar') }}" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.nombre, autocomplete="given-name") }}
+      <fieldset class="campo selector-cucharas selector-tipo">
+        <legend>{{ form.tema.label.text }}</legend>
+        <div class="opciones-cucharas">
+          {% for opcion in form.tema %}
+            <label class="opcion-cuchara">{{ opcion() }}<span>{{ opcion.label.text }}</span></label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      {{ campo(form.zona_horaria) }}
+      <button class="boton boton-ancho" type="submit">Guardar</button>
+    </form>
+  </section>
+
+  {% if google.disponible or google.conexion %}
+    {% include "perfil/_google.html" %}
+  {% endif %}
+
+  {% include "perfil/_reloj.html" %}
+
+  <section class="panel" aria-labelledby="titulo-cuenta">
+    <h2 id="titulo-cuenta" class="titulo-panel">🔐 Cuenta</h2>
+    <p><a href="{{ url_for('privacidad') }}">Política de privacidad</a></p>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="boton boton-secundario" type="submit">Cerrar sesión</button>
+    </form>
+  </section>
+{% endblock %}

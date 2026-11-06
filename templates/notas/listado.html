@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "notas/_macros.html" import formulario_nota %}
+
+{% block titulo %}Notas{% endblock %}
+
+{% block contenido %}
+  <h1>Notas</h1>
+  <p class="subtitulo">Apúntalo antes de que se escape.</p>
+
+  <details class="panel panel-plegable" {% if form.errors or not notas and not busqueda and not etiqueta_activa %}open{% endif %}>
+    <summary class="titulo-panel">＋ Nueva nota</summary>
+    {{ formulario_nota(form, url_for('notas.nueva'), "Guardar nota") }}
+  </details>
+
+  <form method="get" action="{{ url_for('notas.listado') }}" class="buscador" role="search">
+    <label class="solo-lectores" for="q">Buscar en tus notas</label>
+    <input id="q" name="q" type="search" value="{{ busqueda }}" placeholder="🔍 Buscar en tus notas…">
+    {% if etiqueta_activa %}<input type="hidden" name="etiqueta" value="{{ etiqueta_activa }}">{% endif %}
+    <button class="boton boton-secundario" type="submit">Buscar</button>
+  </form>
+
+  {% if etiquetas %}
+    <nav class="chips" aria-label="Filtrar por etiqueta">
+      <a class="chip{% if not etiqueta_activa %} chip-activo{% endif %}"
+         href="{{ url_for('notas.listado', q=busqueda or None) }}">Todas</a>
+      {% for e in etiquetas %}
+        <a class="chip{% if e.nombre == etiqueta_activa %} chip-activo{% endif %}"
+           href="{{ url_for('notas.listado', etiqueta=e.nombre, q=busqueda or None) }}">#{{ e.nombre }}</a>
+      {% endfor %}
+    </nav>
+  {% endif %}
+
+  {% if notas %}
+    <ul class="rejilla-notas">
+      {% for nota in notas %}
+        <li class="nota-tarjeta{% if nota.fijada %} nota-fijada{% endif %}">
+          <a class="nota-cuerpo" href="{{ url_for('notas.editar', nota_id=nota.id) }}">
+            {% if nota.titulo %}<span class="nota-titulo">{{ nota.titulo }}</span>{% endif %}
+            <span class="nota-texto">{{ nota.contenido|truncate(220) }}</span>
+          </a>
+          <div class="nota-pie">
+            <span class="nota-etiquetas">
+              {% for e in nota.etiquetas %}<span class="chip chip-pequeno">#{{ e.nombre }}</span>{% endfor %}
+            </span>
+            <form method="post" action="{{ url_for('notas.fijar', nota_id=nota.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="boton-icono{% if nota.fijada %} activo{% endif %}" type="submit"
+                      aria-label="{{ 'Dejar de fijar' if nota.fijada else 'Fijar arriba' }}"
+                      title="{{ 'Dejar de fijar' if nota.fijada else 'Fijar arriba' }}">📌</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif busqueda or etiqueta_activa %}
+    <p class="vacio">No hay notas que coincidan. <a href="{{ url_for('notas.listado') }}">Ver todas</a></p>
+  {% else %}
+    <p class="vacio">Aún no tienes notas. ¡Apunta la primera! 💜</p>
+  {% endif %}
+{% endblock %}

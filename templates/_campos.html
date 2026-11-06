@@ -1,0 +1,27 @@
+{# Macros reutilizables para pintar campos de formulario accesibles #}
+
+{% macro campo(field, autocomplete="on", autofocus=False) %}
+  <div class="campo{% if field.errors %} campo-con-error{% endif %}">
+    {{ field.label }}
+    {{ field(autocomplete=autocomplete, autofocus=autofocus,
+             **({'aria-invalid': 'true', 'aria-describedby': field.id ~ '-error'} if field.errors else {})) }}
+    {% if field.description %}
+      <p class="ayuda">{{ field.description }}</p>
+    {% endif %}
+    {% if field.errors %}
+      <p class="error" id="{{ field.id }}-error">{{ field.errors[0] }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro casilla(field) %}
+  <div class="campo campo-casilla{% if field.errors %} campo-con-error{% endif %}">
+    <label>
+      {{ field(**({'aria-invalid': 'true', 'aria-describedby': field.id ~ '-error'} if field.errors else {})) }}
+      <span>{{ caller() if caller else field.label.text }}</span>
+    </label>
+    {% if field.errors %}
+      <p class="error" id="{{ field.id }}-error">{{ field.errors[0] }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}

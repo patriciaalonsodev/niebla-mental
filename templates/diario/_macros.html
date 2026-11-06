@@ -1,0 +1,49 @@
+{# Piezas reutilizables del diario #}
+{% from "_campos.html" import campo %}
+
+{% macro selector_animo(field) %}
+  <fieldset class="campo selector-cucharas selector-animo">
+    <legend>{{ field.label.text }}</legend>
+    <div class="opciones-cucharas">
+      {% for opcion in field %}
+        {% set info = emoji_animo(opcion.data|int) if opcion.data else None %}
+        <label class="opcion-cuchara" title="{{ info[1] if info else 'Sin indicar' }}">
+          {{ opcion(**{"aria-label": info[1] if info else "Sin indicar"}) }}
+          <span aria-hidden="true">{{ info[0] if info else "—" }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+{% endmacro %}
+
+{# Escribir o corregir: la propia página de papel es el formulario #}
+{% macro formulario_diario(form, accion, texto_boton) %}
+  <form method="post" action="{{ accion }}" novalidate class="hoja-diario hoja-escribir">
+    {{ form.hidden_tag() }}
+    <div class="hoja-cabecera">
+      <label class="solo-lectores" for="{{ form.fecha.id }}">{{ form.fecha.label.text }}</label>
+      {{ form.fecha(class="hoja-campo-fecha") }}
+    </div>
+    {% for error in form.fecha.errors %}<p class="error">{{ error }}</p>{% endfor %}
+
+    {{ selector_animo(form.estado_animo) }}
+
+    <details class="mas-opciones" {% if form.pregunta_guia.data %}open{% endif %}>
+      <summary>💡 ¿No sabes qué escribir? Elige una pregunta</summary>
+      <label class="solo-lectores" for="{{ form.pregunta_guia.id }}">{{ form.pregunta_guia.label.text }}</label>
+      {{ form.pregunta_guia(class="hoja-campo-pregunta") }}
+    </details>
+
+    <label class="solo-lectores" for="{{ form.contenido.id }}">{{ form.contenido.label.text }}</label>
+    {{ form.contenido(class="hoja-campo-texto", placeholder="Querido diario…", rows=12,
+                      **({"aria-invalid": "true", "aria-describedby": "error-contenido"} if form.contenido.errors else {})) }}
+    {% for error in form.contenido.errors %}<p class="error" id="error-contenido">{{ error }}</p>{% endfor %}
+
+    <label class="hoja-etiqueta-campo">
+      <span>Etiquetas</span>
+      {{ form.etiquetas(class="hoja-campo-etiquetas", autocomplete="off", placeholder="brote, trabajo, familia") }}
+    </label>
+    <p class="hoja-nota">🔒 Solo lo puedes leer tú: se guarda cifrado.</p>
+    <button class="boton boton-ancho" type="submit">{{ texto_boton }}</button>
+  </form>
+{% endmacro %}

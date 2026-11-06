@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es" data-tema="{{ tema|default('oscuro') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#221a3a">
+  <title>{% block titulo %}Inicio{% endblock %} · {{ nombre_app }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+  {% block cabeza %}{% endblock %}
+</head>
+<body>
+  <header class="cabecera">
+    <a class="marca" href="{{ url_for('inicio') }}">
+      <span class="marca-icono" aria-hidden="true">💜</span>
+      <span>{{ nombre_app }}</span>
+    </a>
+  </header>
+
+  {% if current_user.is_authenticated %}
+    {# Abajo en el móvil, arriba a la derecha en el PC #}
+    <nav class="navegacion" aria-label="Principal">
+      {% for clave, endpoint, icono, texto in [
+           ('inicio', 'inicio', '🏠', 'Inicio'),
+           ('agenda', 'eventos.agenda', '📅', 'Agenda'),
+           ('apuntar', 'captura.bandeja', '＋', 'Apuntar'),
+           ('salud', 'salud.inicio', '💊', 'Salud'),
+           ('perfil', 'perfil.inicio', '👤', 'Perfil'),
+         ] %}
+        <a class="nav-enlace nav-{{ clave }}{% if seccion_activa == clave %} nav-activo{% endif %}"
+           href="{{ url_for(endpoint) }}" {% if seccion_activa == clave %}aria-current="page"{% endif %}>
+          {% if clave == 'perfil' and current_user.foto %}
+            <img class="nav-icono avatar avatar-nav" src="{{ url_for('perfil.foto', v=current_user.foto_version) }}" alt="">
+          {% else %}
+            <span class="nav-icono" aria-hidden="true">{{ icono }}</span>
+          {% endif %}
+          <span class="nav-texto">{{ texto }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+  {% endif %}
+
+  <main class="contenido">
+    {% if volver_inicio %}
+      <p class="volver"><a href="{{ url_for('inicio') }}">← Inicio</a></p>
+    {% endif %}
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% if mensajes %}
+        <div class="avisos" role="status">
+          {% for categoria, mensaje in mensajes %}
+            <p class="aviso aviso-{{ categoria }}">{{ mensaje }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block contenido %}{% endblock %}
+  </main>
+
+  {% if current_user.is_authenticated %}
+    <script src="{{ url_for('static', filename='js/avisos.js') }}"
+            data-url="{{ url_for('medicacion.avisos') }}" defer></script>
+  {% endif %}
+</body>
+</html>

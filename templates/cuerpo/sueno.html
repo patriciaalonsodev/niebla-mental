@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "salud/_pestanas.html" import pestanas %}
+{% from "cuerpo/_macros.html" import barras, aviso_reloj %}
+
+{% block titulo %}Sueño{% endblock %}
+
+{% block contenido %}
+  <h1>Salud</h1>
+  {{ pestanas("sueno") }}
+
+  <section class="panel sueno-anoche" aria-label="Tu última noche">
+    {% if anoche %}
+      <p class="ayuda">{{ 'Anoche' if anoche.fecha == hoy else 'La noche anterior' }} {{ aviso_reloj(anoche.origen) }}</p>
+      <p class="sueno-total"><strong>{{ anoche.minutos_dormido|horas_minutos }}</strong></p>
+      <p class="sueno-horas">
+        {% if anoche.hora_acostarse %}🌙 {{ anoche.hora_acostarse.strftime('%H:%M') }}{% endif %}
+        {% if anoche.hora_levantarse %} → ☀️ {{ anoche.hora_levantarse.strftime('%H:%M') }}{% endif %}
+        {% if anoche.despertares %} · {{ anoche.despertares }} despertar{{ 'es' if anoche.despertares != 1 }}{% endif %}
+        {% if anoche.calidad %} · te levantaste {{ ['', '😫', '😕', '😐', '🙂', '😄'][anoche.calidad] }}{% endif %}
+      </p>
+      {% if fases %}
+        <div class="fases" role="img" aria-label="Fases: {% for f in fases %}{{ f.nombre }} {{ f.minutos|horas_minutos }}{% if not loop.last %}, {% endif %}{% endfor %}">
+          {% for f in fases if f.minutos %}<span class="fase fase-{{ f.clave }}" style="flex: {{ f.minutos }}"></span>{% endfor %}
+        </div>
+        <ul class="fases-leyenda">
+          {% for f in fases %}<li><span class="punto fase-{{ f.clave }}"></span>{{ f.nombre }} {{ f.minutos|horas_minutos }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    {% else %}
+      <p class="ayuda">Aún no hay datos de esta noche. Apúntala abajo o conecta tu reloj desde el Perfil.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2 class="titulo-panel">Esta semana
+      {% if media %}<span class="ayuda">· media {{ media|horas_minutos }}</span>{% endif %}</h2>
+    {{ barras(grafica, "horas", "Horas dormidas los últimos 7 días") }}
+    <p class="ayuda">La línea marca {{ recomendadas|kg }} h, lo que suele recomendarse a una persona adulta.</p>
+  </section>
+
+  <details class="panel panel-plegable" {% if form.errors or not anoche %}open{% endif %}>
+    <summary class="titulo-panel">✍️ Apuntar la noche a mano</summary>
+    <form method="post" action="{{ url_for('cuerpo.guardar_sueno_manual') }}" novalidate class="formulario">
+      {{ form.hidden_tag() }}
+      {{ campo(form.fecha) }}
+      <div class="campos-fila campos-fila-2">
+        {{ campo(form.hora_acostarse) }}
+        {{ campo(form.hora_levantarse) }}
+      </div>
+      {{ campo(form.horas, autocomplete="off") }}
+      <fieldset class="campo selector-cucharas selector-animo">
+        <legend>{{ form.calidad.label.text }}</legend>
+        <div class="opciones-cucharas">
+          {% for opcion in form.calidad %}<label class="opcion-cuchara">{{ opcion() }}<span>{{ opcion.label.text }}</span></label>{% endfor %}
+        </div>
+      </fieldset>
+      {{ campo(form.despertares, autocomplete="off") }}
+      <button class="boton boton-ancho" type="submit">Guardar noche</button>
+    </form>
+  </details>
+{% endblock %}

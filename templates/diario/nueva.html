@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "diario/_macros.html" import formulario_diario %}
+
+{% block titulo %}Escribir en el diario{% endblock %}
+
+{% block cabeza %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/libro.css') }}">
+  <script src="{{ url_for('static', filename='js/libro.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a class="pasar-atras" href="{{ url_for('diario.listado') }}">← Diario</a></p>
+  <h1 class="solo-lectores">Escribir en el diario</h1>
+  {{ formulario_diario(form, url_for('diario.nueva'), "Guardar en el diario") }}
+{% endblock %}

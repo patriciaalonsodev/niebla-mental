@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "_campos.html" import campo %}
+{% from "salud/_pestanas.html" import pestanas %}
+
+{% block titulo %}Salud{% endblock %}
+
+{% macro escala(field, sintoma) %}
+  <fieldset class="campo escala">
+    <legend><span aria-hidden="true">{{ sintoma.icono }}</span> {{ sintoma.pregunta }}</legend>
+    <div class="opciones-escala">
+      {% for opcion in field %}
+        <label class="opcion-escala{% if not opcion.data %} opcion-vacia{% endif %}"
+               {% if opcion.data %}data-nivel="{{ nivel_sintoma(sintoma, opcion.data|int) }}"{% endif %}>
+          {{ opcion(**({"aria-label": "Sin indicar"} if not opcion.data else {})) }}
+          <span>{{ opcion.label.text }}</span>
+        </label>
+      {% endfor %}
+    </div>
+    <p class="extremos ayuda"><span>0 = {{ sintoma.bajo }}</span><span>10 = {{ sintoma.alto }}</span></p>
+  </fieldset>
+{% endmacro %}
+
+{% block contenido %}
+  <h1>Salud</h1>
+  {{ pestanas("sintomas") }}
+  <p class="subtitulo">Un minuto al día. Con el tiempo verás qué te sienta bien y qué no.</p>
+
+  <nav class="navegar-dias" aria-label="Cambiar de día">
+    <a class="boton boton-secundario boton-pequeno" href="{{ url_for('salud.inicio', fecha=dia_anterior.isoformat()) }}"
+       aria-label="Día anterior">←</a>
+    <h2 class="dia-actual">
+      {% if fecha == hoy %}Hoy, {% endif %}{{ fecha|fecha_larga }}
+    </h2>
+    {% if dia_siguiente %}
+      <a class="boton boton-secundario boton-pequeno" href="{{ url_for('salud.inicio', fecha=dia_siguiente.isoformat()) if dia_siguiente != hoy else url_for('salud.inicio') }}"
+         aria-label="Día siguiente">→</a>
+    {% else %}
+      <span class="boton-hueco" aria-hidden="true"></span>
+    {% endif %}
+  </nav>
+
+  <section class="panel">
+    <form method="post" novalidate class="formulario"
+          action="{{ url_for('salud.guardar_sintomas', fecha=fecha.isoformat()) if fecha != hoy else url_for('salud.guardar_sintomas') }}">
+      {{ form.hidden_tag() }}
+      <p class="ayuda">Marca solo lo que quieras; lo demás puede quedar en «—».</p>
+      {% for sintoma in sintomas %}
+        {{ escala(form[sintoma.clave], sintoma) }}
+      {% endfor %}
+      {{ campo(form.notas) }}
+      <button class="boton boton-ancho" type="submit">
+        {{ "Guardar cambios" if ya_registrado else "Guardar cómo estoy" }}
+      </button>
+    </form>
+  </section>
+
+  <section class="grupo-tareas">
+    <h2>Últimos {{ historial|length }} días</h2>
+    <div class="tabla-desplazable">
+      <table class="historial">
+        <thead>
+          <tr>
+            <th scope="col">Día</th>
+            {% for s in sintomas %}
+              <th scope="col"><span aria-hidden="true" title="{{ form[s.clave].label.text }}">{{ s.icono }}</span><span class="solo-lectores">{{ form[s.clave].label.text }}</span></th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for dia, registro in historial %}
+            <tr{% if dia == fecha %} class="fila-actual"{% endif %}>
+              <th scope="row">
+                <a href="{{ url_for('salud.inicio', fecha=dia.isoformat()) if dia != hoy else url_for('salud.inicio') }}">{{ dia|fecha_corta }}</a>
+              </th>
+              {% for s in sintomas %}
+                {% set valor = registro[s.clave] if registro else None %}
+                <td{% if valor is not none %} data-nivel="{{ nivel_sintoma(s, valor) }}"{% endif %}>
+                  {{ valor if valor is not none else "·" }}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="ayuda leyenda">
+      <span data-nivel="bien">Bien</span> <span data-nivel="regular">Regular</span> <span data-nivel="mal">Mal</span>
+      · Pulsa un día para verlo o corregirlo.
+    </p>
+  </section>
+{% endblock %}

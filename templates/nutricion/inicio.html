@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "nutricion/_macros.html" import pestanas, barra_macro, grafica_peso %}
+
+{% block titulo %}Nutrición{% endblock %}
+
+{% block contenido %}
+  <h1>Nutrición</h1>
+  {{ pestanas("hoy") }}
+
+  <nav class="navegar-dias" aria-label="Cambiar de día">
+    <a class="boton boton-secundario boton-pequeno" href="{{ url_for('nutricion.inicio', fecha=dia_anterior.isoformat()) }}" aria-label="Día anterior">‹</a>
+    <h2 class="dia-actual">{% if fecha == hoy %}Hoy, {% endif %}{{ fecha|fecha_larga }}</h2>
+    {% if fecha < hoy %}
+      <a class="boton boton-secundario boton-pequeno" href="{{ url_for('nutricion.inicio', fecha=dia_siguiente.isoformat()) if dia_siguiente != hoy else url_for('nutricion.inicio') }}" aria-label="Día siguiente">›</a>
+    {% else %}<span class="boton-hueco" aria-hidden="true"></span>{% endif %}
+  </nav>
+
+  {# Cuánto llevas frente a tu plan #}
+  <section class="panel resumen-macros" aria-label="Resumen del día">
+    {% if objetivo %}
+      {% set kcal = barras[0] %}
+      <p class="queda">
+        {% if kcal.queda is not none and kcal.queda >= 0 %}
+          Te quedan <strong>{{ kcal.queda|round|int }} kcal</strong>
+        {% else %}
+          Te has pasado <strong>{{ (-kcal.queda)|round|int }} kcal</strong> · no pasa nada, mañana más 💜
+        {% endif %}
+      </p>
+    {% else %}
+      <p class="ayuda">Aún no tienes plan. <a href="{{ url_for('nutricion.plan') }}">Calcula tus calorías y macros</a> para ver cuánto te queda cada día.</p>
+    {% endif %}
+    {% for b in barras %}{{ barra_macro(b) }}{% endfor %}
+  </section>
+
+  {# Las comidas del día #}
+  {% for momento, nombre, comidas in por_momento %}
+    {% if comidas or momento not in ('media_manana', 'picoteo') %}
+      <section class="momento-comida">
+        <div class="momento-cabecera">
+          <h3>{{ nombre }}</h3>
+          {% if comidas %}<span class="ayuda">{{ comidas|sum(attribute='kcal')|round|int }} kcal</span>{% endif %}
+          <a class="boton-redondo boton-redondo-mini" href="{{ url_for('nutricion.anadir', momento=momento, fecha=fecha.isoformat()) }}"
+             aria-label="Añadir a {{ nombre[2:]|trim }}">＋</a>
+        </div>
+        {% if comidas %}
+          <ul class="compra-filas">
+            {% for c in comidas %}
+              <li class="compra-fila comida-fila">
+                <span class="compra-nombre">{{ c.nombre }}{% if c.gramos %} <span class="ayuda">· {{ c.gramos|kg }} g</span>{% endif %}</span>
+                <span class="comida-macros" aria-label="{{ c.kcal|round|int }} kilocalorías, {{ c.proteinas|round|int }} gramos de proteína, {{ c.hidratos|round|int }} de hidratos y {{ c.grasas|round|int }} de grasas">
+                  <strong>{{ c.kcal|round|int }}</strong> · P{{ c.proteinas|round|int }} H{{ c.hidratos|round|int }} G{{ c.grasas|round|int }}
+                </span>
+                {% if fecha != hoy %}
+                  <form method="post" action="{{ url_for('nutricion.repetir_comida', comida_id=c.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="compra-quitar" type="submit" title="Apuntarlo también hoy" aria-label="Apuntar {{ c.nombre }} también hoy">↻</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('nutricion.borrar_comida', comida_id=c.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="compra-quitar" type="submit" aria-label="Quitar {{ c.nombre }}">✕</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+    {% endif %}
+  {% endfor %}
+  <p class="ayuda"><a href="{{ url_for('nutricion.anadir', momento='picoteo', fecha=fecha.isoformat()) }}">＋ Media mañana o picoteo</a></p>
+
+  {% if grafica %}
+    <section class="panel">
+      <h2 class="titulo-panel">⚖️ Tu peso <a class="ayuda" href="{{ url_for('nutricion.peso') }}">Apuntar</a></h2>
+      {{ grafica_peso(grafica) }}
+    </section>
+  {% endif %}
+{% endblock %}

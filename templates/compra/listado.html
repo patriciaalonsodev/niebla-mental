@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block titulo %}Compra{% endblock %}
+
+{# Botón-chip que añade un producto con un toque #}
+{% macro chip_producto(nombre) %}
+  {% set ya = normalizar(nombre) in en_lista %}
+  <form method="post" action="{{ url_for('compra.nuevo') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="nombre" value="{{ nombre }}">
+    <button class="chip chip-producto{% if ya %} chip-en-lista{% endif %}" type="submit"
+            {% if ya %}disabled aria-label="{{ nombre }} (ya está en la lista)"{% endif %}>
+      {% if ya %}✓ {% endif %}{{ nombre }}
+    </button>
+  </form>
+{% endmacro %}
+
+{% macro fila(item) %}
+  <li class="compra-fila{% if item.comprado %} compra-hecha{% endif %}">
+    <form method="post" action="{{ url_for('compra.marcar', item_id=item.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="compra-check" type="submit"
+              aria-label="{{ 'Desmarcar' if item.comprado else 'Marcar como comprado' }}: {{ item.nombre }}">
+        <span aria-hidden="true">{{ '✓' if item.comprado else '' }}</span>
+      </button>
+    </form>
+    <span class="compra-nombre">{{ item.nombre }}</span>
+    {% if item.cantidad %}<span class="compra-cantidad">{{ item.cantidad }}</span>{% endif %}
+    <form method="post" action="{{ url_for('compra.borrar', item_id=item.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="compra-quitar" type="submit" aria-label="Quitar de la lista: {{ item.nombre }}" title="Quitar">✕</button>
+    </form>
+  </li>
+{% endmacro %}
+
+{% block contenido %}
+  <h1>Compra</h1>
+
+  {# Añadir: escribir, dictar o escanear #}
+  <form method="post" action="{{ url_for('compra.nuevo') }}" novalidate class="compra-anadir" id="form-compra">
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="varios" id="compra-varios">
+    <label class="solo-lectores" for="{{ form.nombre.id }}">{{ form.nombre.label.text }}</label>
+    {{ form.nombre(autocomplete="off", placeholder="Añadir… (p. ej. «2 leches»)", enterkeyhint="done",
+                   **({"aria-invalid": "true", "aria-describedby": "error-compra"} if form.nombre.errors else {})) }}
+    <button class="boton-redondo" type="button" id="boton-voz" hidden
+            aria-label="Dictar por voz" title="Dictar por voz">🎤</button>
+    <button class="boton-redondo" type="button" id="boton-escanear" hidden
+            aria-label="Escanear código de barras" title="Escanear código de barras">📷</button>
+    <button class="boton-redondo boton-redondo-principal" type="submit" aria-label="Añadir a la lista">＋</button>
+  </form>
+  {% for error in form.nombre.errors %}<p class="error" id="error-compra">{{ error }}</p>{% endfor %}
+  <p class="ayuda compra-estado" id="compra-estado" role="status" aria-live="polite"></p>
+
+  {# Escáner: se abre encima al pulsar 📷 #}
+  <div class="escaner" id="escaner" hidden>
+    <video id="escaner-video" playsinline muted></video>
+    <p>Apunta al código de barras</p>
+    <button class="boton boton-secundario" type="button" id="escaner-cerrar">Cancelar</button>
+  </div>
+
+  {# La lista, por pasillos #}
+  {% if por_pasillo %}
+    <section class="compra-lista" aria-label="Por comprar">
+      <h2 class="compra-titulo">Por comprar <span class="contador">{{ num_pendientes }}</span></h2>
+      {% for pasillo, items in por_pasillo %}
+        <h3 class="compra-pasillo">{{ pasillo }}</h3>
+        <ul class="compra-filas">{% for item in items %}{{ fila(item) }}{% endfor %}</ul>
+      {% endfor %}
+    </section>
+  {% elif not comprados %}
+    <p class="vacio">La lista está vacía. Toca abajo lo que te falte 🛒</p>
+  {% else %}
+    <p class="vacio">¡Lo tienes todo! 🎉</p>
+  {% endif %}
+
+  {% if comprados %}
+    <details class="compra-carro">
+      <summary class="compra-titulo">En el carro <span class="contador">{{ comprados|length }}</span></summary>
+      <ul class="compra-filas">{% for item in comprados %}{{ fila(item) }}{% endfor %}</ul>
+      <form method="post" action="{{ url_for('compra.vaciar_comprados') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario boton-pequeno" type="submit">Quitar lo comprado</button>
+      </form>
+    </details>
+  {% endif %}
+
+  {# Añadir con un toque #}
+  <section class="compra-rapida" aria-labelledby="titulo-rapida">
+    <h2 id="titulo-rapida" class="compra-titulo">Añadir con un toque</h2>
+
+    {% if frecuentes %}
+      <h3 class="compra-pasillo">⭐ Lo que sueles comprar</h3>
+      <div class="chips-productos">{% for f in frecuentes %}{{ chip_producto(f.nombre) }}{% endfor %}</div>
+      <details class="mas-opciones compra-gestionar">
+        <summary>Quitar de «lo que sueles comprar»</summary>
+        <ul class="compra-filas">
+          {% for f in frecuentes %}
+            <li class="compra-fila">
+              <span class="compra-nombre">{{ f.nombre }}</span>
+              <form method="post" action="{{ url_for('compra.olvidar_frecuente', frecuente_id=f.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="compra-quitar" type="submit" aria-label="Quitar {{ f.nombre }} de lo que sueles comprar">✕</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+
+    {% for pasillo, productos in catalogo.items() %}
+      <details class="compra-catalogo">
+        <summary class="compra-pasillo">{{ pasillo }}</summary>
+        <div class="chips-productos">{% for p in productos %}{{ chip_producto(p) }}{% endfor %}</div>
+      </details>
+    {% endfor %}
+  </section>
+
+  <script src="{{ url_for('static', filename='js/compra.js') }}" defer></script>
+{% endblock %}

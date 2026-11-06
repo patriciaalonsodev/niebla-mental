@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "notas/_macros.html" import formulario_nota %}
+
+{% block titulo %}Editar nota{% endblock %}
+
+{% block contenido %}
+  <p><a href="{{ url_for('notas.listado') }}">← Volver a notas</a></p>
+
+  <section class="panel">
+    <h1>Editar nota</h1>
+    {{ formulario_nota(form, url_for('notas.editar', nota_id=nota.id), "Guardar cambios") }}
+  </section>
+
+  <form method="post" action="{{ url_for('notas.borrar', nota_id=nota.id) }}" class="zona-borrar"
+        onsubmit="return confirm('¿Seguro que quieres borrar esta nota?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="boton boton-peligro" type="submit">🗑️ Borrar nota</button>
+  </form>
+{% endblock %}
