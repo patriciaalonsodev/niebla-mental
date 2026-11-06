@@ -59,6 +59,7 @@
   {% if current_user.is_authenticated %}
     <script src="{{ url_for('static', filename='js/avisos.js') }}"
             data-url="{{ url_for('medicacion.avisos') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/dictado.js') }}" defer></script>
   {% endif %}
 </body>
 </html>

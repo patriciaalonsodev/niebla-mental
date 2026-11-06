@@ -1660,3 +1660,42 @@ a.boton-redondo { text-decoration: none; }
 .guia ol { padding-left: 1.3rem; display: grid; gap: 0.55rem; }
 .guia ul { padding-left: 1.1rem; margin: 0.4rem 0; display: grid; gap: 0.3rem; }
 .guia code { padding: 0.05rem 0.35rem; border-radius: 6px; background: rgb(10 5 25 / 0.35); overflow-wrap: anywhere; font-size: 0.88rem; }
+
+/* ── Dictado por voz ──────────────────────────────────────── */
+
+.dictado { position: relative; display: block; }
+.dictado > input { padding-right: 3.2rem !important; }
+.dictado > textarea { padding-right: 3.4rem !important; }
+
+.dictado-boton {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--relieve);
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.dictado-largo .dictado-boton { top: 0.4rem; transform: none; }
+.dictado-boton:hover { border-color: var(--lavanda); }
+.dictado-boton.escuchando {
+  background: var(--nivel-mal);
+  border-color: transparent;
+  animation: latido-centro 1s ease-in-out infinite;
+}
+.dictado-largo .dictado-boton.escuchando { animation-name: latido-arriba; }
+/* El latido conserva el centrado vertical del botón */
+@keyframes latido-centro { 0%, 100% { transform: translateY(-50%); } 50% { transform: translateY(-50%) scale(1.08); } }
+@keyframes latido-arriba { 50% { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .dictado-boton.escuchando { animation: none; } }
+.dictando { outline: 2px solid var(--nivel-mal); outline-offset: 2px; }
+
+/* En el diario de papel, el micro con aspecto de papel */
+.hoja-escribir .dictado-boton { background: rgb(255 255 255 / 0.7); border-color: var(--papel-sombra); }
