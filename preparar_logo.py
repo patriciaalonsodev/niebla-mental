@@ -29,9 +29,12 @@ def con_fondo(logo, lado, margen=0.12):
 def main():
     origen = CARPETA / "logo.png"
     logo = Image.open(origen).convert("RGBA")
-    # Si el fondo es blanco, quitarlo para que quede bien sobre el morado
-    pixeles = logo.get_flattened_data() if hasattr(logo, "get_flattened_data") else logo.getdata()
-    logo.putdata([(r, g, b, 0) if r > 245 and g > 245 and b > 245 else (r, g, b, a) for r, g, b, a in pixeles])
+    # Si el fondo es blanco (sin transparencia), quitarlo para que quede bien
+    # sobre el morado. Si ya es transparente, no se toca: así los brillos
+    # blancos del propio logo se conservan.
+    if logo.getchannel("A").getextrema()[0] == 255:
+        pixeles = logo.get_flattened_data() if hasattr(logo, "get_flattened_data") else logo.getdata()
+        logo.putdata([(r, g, b, 0) if r > 245 and g > 245 and b > 245 else (r, g, b, a) for r, g, b, a in pixeles])
     logo = recortar_transparente(logo)
 
     pequeno = logo.copy()
