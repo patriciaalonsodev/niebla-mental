@@ -16,7 +16,7 @@
 {% block titulo %}Tu plan{% endblock %}
 
 {% block contenido %}
-  <h1>Nutrición</h1>
+  <h1 class="titulo-con-icono">{% if icono_url("nutricion") %}<img src="{{ icono_url("nutricion") }}" alt="" width="44" height="44">{% endif %}Nutrición</h1>
   {{ pestanas("plan") }}
 
   {% if plan.kcal %}

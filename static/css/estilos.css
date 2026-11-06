@@ -1822,3 +1822,6 @@ a.boton-redondo { text-decoration: none; }
 .tachado .lista-compra-cantidad { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--texto-suave); }
 .compra-resumen { margin: 0.3rem 0 0.8rem; }
 .lista-compra-gestion > li { padding-left: 0.3rem; min-height: 44px; }
+/* El icono de la sección junto a su título */
+.titulo-con-icono { display: flex; align-items: center; gap: 0.6rem; }
+.titulo-con-icono img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 3px 6px rgb(10 5 25 / 0.45)); }

@@ -9,7 +9,7 @@
 
 {% block contenido %}
   <div class="diario-barra">
-    <h1>Diario</h1>
+    <h1 class="titulo-con-icono">{% if icono_url("diario") %}<img src="{{ icono_url("diario") }}" alt="" width="44" height="44">{% endif %}Diario</h1>
     <a class="boton-redondo boton-redondo-principal" href="{{ url_for('diario.formulario_nueva') }}"
        aria-label="Escribir una página nueva" title="Escribir">✍️</a>
   </div>

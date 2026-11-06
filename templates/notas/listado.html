@@ -4,7 +4,7 @@
 {% block titulo %}Notas{% endblock %}
 
 {% block contenido %}
-  <h1>Notas</h1>
+  <h1 class="titulo-con-icono">{% if icono_url("notas") %}<img src="{{ icono_url("notas") }}" alt="" width="44" height="44">{% endif %}Notas</h1>
   <p class="subtitulo">Apúntalo antes de que se escape.</p>
 
   <details class="panel panel-plegable" {% if form.errors or not notas and not busqueda and not etiqueta_activa %}open{% endif %}>

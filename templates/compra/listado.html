@@ -16,7 +16,7 @@
 {% endmacro %}
 
 {% block contenido %}
-  <h1>Compra</h1>
+  <h1 class="titulo-con-icono">{% if icono_url("compra") %}<img src="{{ icono_url("compra") }}" alt="" width="44" height="44">{% endif %}Compra</h1>
 
   {# Añadir: escribir, dictar o escanear #}
   <form method="post" action="{{ url_for('compra.nuevo') }}" novalidate class="compra-anadir" id="form-compra">

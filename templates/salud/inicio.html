@@ -21,7 +21,7 @@
 {% endmacro %}
 
 {% block contenido %}
-  <h1>Salud</h1>
+  <h1 class="titulo-con-icono">{% if icono_url("salud") %}<img src="{{ icono_url("salud") }}" alt="" width="44" height="44">{% endif %}Salud</h1>
   {{ pestanas("sintomas") }}
   <p class="subtitulo">Un minuto al día. Con el tiempo verás qué te sienta bien y qué no.</p>
 

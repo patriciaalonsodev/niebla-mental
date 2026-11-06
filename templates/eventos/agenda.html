@@ -11,7 +11,7 @@
 
 {% block contenido %}
   <div class="agenda-cabecera">
-    <h1>Agenda</h1>
+    <h1 class="titulo-con-icono">{% if icono_url("agenda") %}<img src="{{ icono_url("agenda") }}" alt="" width="44" height="44">{% endif %}Agenda</h1>
     <a class="boton boton-pequeno" href="{{ url_for('eventos.formulario_nuevo') }}">＋ Nuevo</a>
   </div>
 

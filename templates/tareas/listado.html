@@ -23,7 +23,7 @@
 
 {% block contenido %}
   <div class="agenda-cabecera">
-    <h1>Tareas</h1>
+    <h1 class="titulo-con-icono">{% if icono_url("tareas") %}<img src="{{ icono_url("tareas") }}" alt="" width="44" height="44">{% endif %}Tareas</h1>
     <a class="boton boton-pequeno" href="{{ url_for('tareas.formulario_nueva') }}">＋ Nueva</a>
   </div>
 
