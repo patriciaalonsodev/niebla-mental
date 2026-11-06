@@ -1,4 +1,4 @@
-"""Prepara los iconos de la app a partir de static/img/logo.png.
+"""Prepara el logo y los iconos de la app.
 
 Uso:  .venv/Scripts/python preparar_logo.py
 Crea: logo-64.png (cabecera), icono-180.png (iPhone), icono-192.png e
@@ -26,6 +26,32 @@ def con_fondo(logo, lado, margen=0.12):
     return lienzo.convert("RGB")
 
 
+# Iconos de las secciones: archivo original en static/img → nombre en la app
+ICONOS = {
+    "agenda": "agenda", "compra": "compra", "diario": "diario", "notas": "notas",
+    "nutricon": "nutricion", "nutricion": "nutricion", "perfil": "perfil",
+    "salud": "salud", "tareas": "tareas", "inicio": "inicio",
+}
+LADO_ICONO = 144          # se ven a 48–72 px: así quedan nítidos en pantallas retina
+
+
+def preparar_iconos():
+    """Recorta, centra en un cuadrado y reduce cada icono (PNG transparente)."""
+    destino = CARPETA / "iconos"
+    destino.mkdir(exist_ok=True)
+    for original, nombre in ICONOS.items():
+        ruta = CARPETA / f"{original}.png"
+        if not ruta.exists():
+            continue
+        icono = recortar_transparente(Image.open(ruta).convert("RGBA"))
+        lado = max(icono.size)
+        cuadrado = Image.new("RGBA", (lado, lado), (0, 0, 0, 0))
+        cuadrado.alpha_composite(icono, ((lado - icono.width) // 2, (lado - icono.height) // 2))
+        cuadrado.resize((LADO_ICONO, LADO_ICONO), Image.Resampling.LANCZOS).save(
+            destino / f"{nombre}.png", optimize=True)
+        print("  icono:", nombre)
+
+
 def main():
     origen = CARPETA / "logo.png"
     logo = Image.open(origen).convert("RGBA")
@@ -42,7 +68,8 @@ def main():
     pequeno.save(CARPETA / "logo-64.png")
     for lado in (180, 192, 512):
         con_fondo(logo, lado).save(CARPETA / f"icono-{lado}.png")
-    print("Iconos creados en", CARPETA)
+    print("Logo e iconos de la app creados en", CARPETA)
+    preparar_iconos()
 
 
 if __name__ == "__main__":

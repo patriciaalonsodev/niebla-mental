@@ -116,7 +116,11 @@ def _avisar_si_no_llega(evento):
 @bp.get("/")
 def agenda():
     google_calendar.sincronizar_si_toca(current_user)
-    return render_template("eventos/agenda.html", **_pagina_agenda())
+    return render_template(
+        "eventos/agenda.html",
+        google_conectado=google_calendar.estado_conexion(current_user)["conexion"] is not None,
+        **_pagina_agenda(),
+    )
 
 
 @bp.get("/nuevo")

@@ -37,8 +37,11 @@
          ] %}
         <a class="nav-enlace nav-{{ clave }}{% if seccion_activa == clave %} nav-activo{% endif %}"
            href="{{ url_for(endpoint) }}" {% if seccion_activa == clave %}aria-current="page"{% endif %}>
+          {% set imagen = logo_url if clave == 'inicio' else icono_url(clave) %}
           {% if clave == 'perfil' and current_user.foto %}
             <img class="nav-icono avatar avatar-nav" src="{{ url_for('perfil.foto', v=current_user.foto_version) }}" alt="">
+          {% elif imagen and clave != 'apuntar' %}
+            <img class="nav-icono nav-imagen" src="{{ imagen }}" alt="" width="36" height="36">
           {% else %}
             <span class="nav-icono" aria-hidden="true">{{ icono }}</span>
           {% endif %}

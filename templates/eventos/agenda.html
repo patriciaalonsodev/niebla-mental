@@ -55,4 +55,7 @@
       </section>
     {% endfor %}
   </div>
+  <p class="ayuda agenda-google">
+    <a href="{{ url_for('perfil.inicio') }}#google">📆 {{ "Google Calendar conectado" if google_conectado else "Conectar con Google Calendar" }}</a>
+  </p>
 {% endblock %}

@@ -41,7 +41,7 @@ def test_marcar_y_vaciar_comprados(cliente_con_sesion):
     pan = ItemCompra.query.filter_by(nombre="Pan").one()
 
     texto = cliente_con_sesion.post(f"/compra/{pan.id}/marcar", follow_redirects=True).get_data(as_text=True)
-    assert "En el carro" in texto
+    assert 'class="tachado"' in texto and "Quitar lo tachado (1)" in texto
     db.session.refresh(pan)
     assert pan.comprado
 
@@ -100,13 +100,13 @@ def test_cantidad_escrita_delante(cliente_con_sesion):
     assert (item.nombre, item.cantidad) == ("Leche", "2 litros")
 
 
-def test_lista_por_pasillos(cliente_con_sesion):
+def test_una_sola_lista_ordenada_por_pasillo(cliente_con_sesion):
     for producto in ("Detergente", "Plátanos", "Leche"):
         _anadir(cliente_con_sesion, producto)
     texto = cliente_con_sesion.get("/compra/").get_data(as_text=True)
-    lista = texto.split('aria-label="Por comprar"')[1].split("Añadir con un toque")[0]
-    # En el orden del súper: fruta, lácteos… limpieza
-    assert lista.index("Fruta y verdura") < lista.index("Lácteos") < lista.index("Limpieza")
+    lista = texto.split('class="lista-compra"')[1].split("</ul>")[0]
+    assert lista.count("<li") == 3                                   # una línea por producto, sin bloques
+    assert lista.index("Plátanos") < lista.index("Leche") < lista.index("Detergente")
 
 
 def test_no_se_repite_lo_que_ya_esta(cliente_con_sesion):
@@ -125,17 +125,24 @@ def test_varios_de_golpe_por_voz(cliente_con_sesion):
     assert "Añadidos 3 productos" in texto
 
 
-def test_lo_que_sueles_comprar(cliente_con_sesion):
-    for _ in range(3):
-        _anadir(cliente_con_sesion, "Kéfir")
-        cliente_con_sesion.post(f"/compra/{ItemCompra.query.one().id}/borrar")
-    frecuente = ProductoFrecuente.query.one()
-    assert (frecuente.nombre, frecuente.veces) == ("Kéfir", 3)
-    texto = cliente_con_sesion.get("/compra/").get_data(as_text=True)
-    assert "Lo que sueles comprar" in texto and "Kéfir" in texto
+def test_tachar_se_queda_en_la_lista_y_se_guarda_para_la_proxima(cliente_con_sesion):
+    _anadir(cliente_con_sesion, "Kéfir")
+    _anadir(cliente_con_sesion, "Pan")
+    kefir = ItemCompra.query.filter_by(nombre="Kéfir").one()
+    texto = cliente_con_sesion.post(f"/compra/{kefir.id}/marcar", follow_redirects=True).get_data(as_text=True)
+    lista = texto.split('class="lista-compra"')[1].split("</ul>")[0]
+    assert lista.index("Pan") < lista.index("Kéfir")                  # lo tachado, al final de la misma lista
+    assert 'class="tachado"' in lista
 
+    cliente_con_sesion.post("/compra/vaciar-comprados")
+    assert [i.nombre for i in ItemCompra.query] == ["Pan"]
+    texto = cliente_con_sesion.get("/compra/").get_data(as_text=True)
+    assert "Para la próxima" in texto and "＋ Kéfir" in texto        # para volver a apuntarlo con un toque
+
+    frecuente = ProductoFrecuente.query.filter_by(clave="kefir").one()
+    assert frecuente.veces == 1                                      # tachar no cuenta doble
     cliente_con_sesion.post(f"/compra/frecuentes/{frecuente.id}/olvidar")
-    assert ProductoFrecuente.query.count() == 0
+    assert ProductoFrecuente.query.filter_by(clave="kefir").count() == 0
 
 
 def test_no_se_olvidan_frecuentes_ajenos(app):

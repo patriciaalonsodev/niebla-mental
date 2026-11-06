@@ -50,7 +50,12 @@
         {% else %}
           <div class="tarjeta">
         {% endif %}
-          <span class="tarjeta-icono" aria-hidden="true">{{ seccion.icono }}</span>
+          {% set imagen = icono_url(seccion.imagen) %}
+          {% if imagen %}
+            <img class="tarjeta-imagen" src="{{ imagen }}" alt="" width="72" height="72">
+          {% else %}
+            <span class="tarjeta-icono" aria-hidden="true">{{ seccion.icono }}</span>
+          {% endif %}
           <span class="tarjeta-titulo">{{ seccion.titulo }}</span>
           <span class="tarjeta-texto">{{ seccion.texto }}</span>
         {% if seccion.endpoint %}

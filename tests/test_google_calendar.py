@@ -115,9 +115,12 @@ def _nuevo(cliente, titulo="Comida con mamá", **extra):
 
 # ── Conectar ──────────────────────────────────────────────────
 
-def test_sin_claves_no_aparece(cliente_con_sesion):
-    assert "Google Calendar" not in cliente_con_sesion.get("/perfil/").get_data(as_text=True)
-
+def test_sin_claves_se_ve_y_explica_que_falta(cliente_con_sesion):
+    texto = cliente_con_sesion.get("/perfil/").get_data(as_text=True)
+    assert "Google Calendar" in texto and "Todavía no está activado" in texto
+    assert "GOOGLE_CLIENT_ID" in texto and "http://localhost/google/vuelta" in texto
+    assert "Conectar con Google Calendar</button>" not in texto
+    assert "Conectar con Google Calendar" in cliente_con_sesion.get("/eventos/").get_data(as_text=True)
 
 def test_boton_conectar(cliente_con_sesion, google):
     assert "Conectar con Google Calendar" in cliente_con_sesion.get("/perfil/").get_data(as_text=True)

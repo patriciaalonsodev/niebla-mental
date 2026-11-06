@@ -1756,3 +1756,69 @@ a.boton-redondo { text-decoration: none; }
 .hoja-fecha, .hoja-campo-fecha { font-size: 1.3rem; }
 .hoja-pregunta { font-size: 1.2rem; }
 .hoja-diario .boton, .hoja-diario .error { font-family: system-ui, sans-serif; font-size: 1rem; }
+
+/* ── Iconos propios ───────────────────────────────────────── */
+.tarjeta-imagen { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 4px 8px rgb(10 5 25 / 0.45)); }
+.nav-imagen { width: 36px; height: 36px; object-fit: contain; }
+.nav-enlace:not(.nav-activo) .nav-imagen { filter: saturate(0.75); }
+.agenda-google { margin-top: 1rem; text-align: center; }
+
+/* ── Compra: una lista de verdad (una línea por producto) ─── */
+.lista-compra { list-style: none; margin: 1.2rem 0 0.4rem; padding: 0; }
+.lista-compra > li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-bottom: 1px solid var(--borde);
+}
+.lista-compra > li:first-child { border-top: 1px solid var(--borde); }
+.lista-compra-marcar { flex: 1; min-width: 0; display: flex; }
+.lista-compra-marcar button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 50px;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: 1.1rem;
+  text-align: left;
+  cursor: pointer;
+}
+.casilla-compra {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--lavanda);
+  border-radius: 7px;
+  color: var(--sobre-acento);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.lista-compra-nombre { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lista-compra-cantidad { flex: none; color: var(--texto-suave); font-size: 0.95rem; }
+.lista-compra-quitar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  opacity: 0.6;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.lista-compra-quitar:hover { opacity: 1; background: rgb(255 155 179 / 0.15); }
+
+/* Tachado: se queda en la lista, al final, con una raya */
+.tachado .casilla-compra { background: var(--lavanda); border-color: var(--lavanda); }
+.tachado .lista-compra-nombre,
+.tachado .lista-compra-cantidad { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--texto-suave); }
+.compra-resumen { margin: 0.3rem 0 0.8rem; }
+.lista-compra-gestion > li { padding-left: 0.3rem; min-height: 44px; }

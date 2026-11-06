@@ -82,6 +82,7 @@ def create_app(nombre_config=None):
             "seccion_activa": SECCION_DE.get(request.blueprint, "inicio"),
             "volver_inicio": request.endpoint in LISTADOS_CON_VOLVER,
             "logo_url": _url_logo(app),
+            "icono_url": lambda nombre: _url_icono(app, nombre),
         }
 
     _registrar_rutas_basicas(app)
@@ -123,6 +124,14 @@ def _validar_configuracion(app):
 # Rutas básicas (las secciones irán en blueprints)
 # ──────────────────────────────────────────────────────────────
 
+def _url_icono(app, nombre):
+    """static/img/iconos/<nombre>.png si existe (con ?v= para refrescar la caché)."""
+    ruta = os.path.join(app.static_folder, "img", "iconos", f"{nombre}.png")
+    if not nombre or not os.path.exists(ruta):
+        return None
+    return url_for("static", filename=f"img/iconos/{nombre}.png", v=int(os.path.getmtime(ruta)))
+
+
 def _url_logo(app):
     """El logo, si está guardado en static/img/logo.png (con ?v= para que
     el navegador lo actualice cuando cambie)."""
@@ -149,13 +158,13 @@ LISTADOS_CON_VOLVER = {
 # Secciones de la app. Las que tienen "endpoint" ya funcionan;
 # el resto aparecen como "Próximamente".
 SECCIONES = [
-    {"icono": "✅", "titulo": "Tareas", "endpoint": "tareas.listado", "texto": "Lo que tienes que hacer, con su coste de energía."},
-    {"icono": "📝", "titulo": "Notas", "endpoint": "notas.listado", "texto": "Apunta cualquier cosa antes de que se escape."},
-    {"icono": "📅", "titulo": "Agenda", "endpoint": "eventos.agenda", "texto": "Planes y citas médicas, con las preguntas para el médico."},
-    {"icono": "📖", "titulo": "Diario", "endpoint": "diario.listado", "texto": "Tus reflexiones, cifradas y solo para ti."},
-    {"icono": "🛒", "titulo": "Compra", "endpoint": "compra.listado", "texto": "La lista de la compra, siempre a mano."},
-    {"icono": "🥗", "titulo": "Nutrición", "endpoint": "nutricion.inicio", "texto": "Comidas, calorías y macros, peso y recetas."},
-    {"icono": "💊", "titulo": "Salud", "endpoint": "salud.inicio", "texto": "Síntomas, medicación, pasos y sueño."},
+    {"icono": "✅", "titulo": "Tareas", "imagen": "tareas", "endpoint": "tareas.listado", "texto": "Lo que tienes que hacer, con su coste de energía."},
+    {"icono": "📝", "titulo": "Notas", "imagen": "notas", "endpoint": "notas.listado", "texto": "Apunta cualquier cosa antes de que se escape."},
+    {"icono": "📅", "titulo": "Agenda", "imagen": "agenda", "endpoint": "eventos.agenda", "texto": "Planes y citas médicas, con las preguntas para el médico."},
+    {"icono": "📖", "titulo": "Diario", "imagen": "diario", "endpoint": "diario.listado", "texto": "Tus reflexiones, cifradas y solo para ti."},
+    {"icono": "🛒", "titulo": "Compra", "imagen": "compra", "endpoint": "compra.listado", "texto": "La lista de la compra, siempre a mano."},
+    {"icono": "🥗", "titulo": "Nutrición", "imagen": "nutricion", "endpoint": "nutricion.inicio", "texto": "Comidas, calorías y macros, peso y recetas."},
+    {"icono": "💊", "titulo": "Salud", "imagen": "salud", "endpoint": "salud.inicio", "texto": "Síntomas, medicación, pasos y sueño."},
 ]
 
 

@@ -1,5 +1,5 @@
 {# Panel de Google Calendar (en el perfil) #}
-<section class="panel panel-google" aria-labelledby="titulo-google">
+<section class="panel panel-google" aria-labelledby="titulo-google" id="google">
   <h2 id="titulo-google" class="titulo-panel">
     📆 Google Calendar
     {% if google.conexion %}<span class="contador">Conectado</span>{% endif %}
@@ -31,6 +31,21 @@
       </fieldset>
       <button class="boton boton-secundario" type="submit">Guardar preferencia</button>
     </form>
+  {% elif not google.disponible %}
+    <p>Conecta tu Google Calendar para ver en la agenda tus planes de Google y llevar allí los de esta app.</p>
+    <p><strong>Todavía no está activado en esta app.</strong></p>
+    <details class="mas-opciones">
+      <summary>Si gestionas la app: cómo activarlo</summary>
+      <ol class="guia-pasos">
+        <li>En <strong>Railway</strong> → servicio <em>niebla-mental</em> → <strong>Variables</strong>, añade
+          <code>GOOGLE_CLIENT_ID</code> y <code>GOOGLE_CLIENT_SECRET</code> con los mismos valores que tienes en el
+          <code>.env</code> de tu PC.</li>
+        <li>En <strong>Google Cloud</strong> → Google Auth Platform → <strong>Clientes</strong> → tu cliente →
+          <strong>URIs de redireccionamiento autorizados</strong>, añade:
+          <code>{{ url_for('google.vuelta', _external=True) }}</code></li>
+        <li>Guarda en los dos sitios y espera a que Railway vuelva a publicar.</li>
+      </ol>
+    </details>
   {% else %}
     <p>Conecta tu Google Calendar para ver en la agenda tus planes de Google y llevar allí los de esta app.</p>
     <p class="ayuda">🔒 Las citas médicas llegan a Google solo como «Cita médica», sin detalles. Puedes cambiarlo luego.</p>

@@ -96,7 +96,7 @@ def separar_cantidad(texto):
     return nombre[:1].upper() + nombre[1:], cantidad
 
 
-def _recordar_frecuente(nombre):
+def _recordar_frecuente(nombre, contar=True):
     clave = normalizar(nombre)[:120]
     frecuente = db.session.scalar(
         db.select(ProductoFrecuente).filter_by(usuario_id=current_user.id, clave=clave)
@@ -104,7 +104,8 @@ def _recordar_frecuente(nombre):
     if frecuente is None:
         db.session.add(ProductoFrecuente(usuario_id=current_user.id, clave=clave, nombre=nombre[:120]))
     else:
-        frecuente.veces += 1
+        if contar:
+            frecuente.veces += 1
         frecuente.ultima_vez = ahora_utc()
 
 
@@ -134,33 +135,32 @@ def _requiere_sesion():
 
 def _pintar_listado(form):
     items = db.session.scalars(
-        db.select(ItemCompra)
-        .filter_by(usuario_id=current_user.id)
-        .order_by(ItemCompra.comprado, ItemCompra.creado_en)
+        db.select(ItemCompra).filter_by(usuario_id=current_user.id).order_by(ItemCompra.creado_en)
     ).all()
-    pendientes = [i for i in items if not i.comprado]
-
-    # Agrupar lo pendiente por pasillo, en el orden del catálogo
+    # Lo pendiente, ordenado por pasillo (así lo de la fruta queda junto);
+    # lo tachado, al final de la misma lista
     orden = list(CATALOGO) + [OTROS]
-    grupos = {}
-    for item in pendientes:
-        grupos.setdefault(pasillo_de(item.nombre), []).append(item)
-    por_pasillo = sorted(grupos.items(), key=lambda g: orden.index(g[0]))
+    pendientes = sorted((i for i in items if not i.comprado), key=lambda i: orden.index(pasillo_de(i.nombre)))
+    tachados = [i for i in items if i.comprado]
 
-    en_lista = {normalizar(i.nombre) for i in pendientes}
-    frecuentes = db.session.scalars(
-        db.select(ProductoFrecuente)
-        .filter_by(usuario_id=current_user.id)
-        .order_by(ProductoFrecuente.veces.desc(), ProductoFrecuente.ultima_vez.desc())
-        .limit(MAX_FRECUENTES)
-    ).all()
+    en_lista = {normalizar(i.nombre) for i in items if not i.comprado}
+    # «Para la próxima»: lo que has comprado antes y ahora no está en la lista
+    frecuentes = [
+        f for f in db.session.scalars(
+            db.select(ProductoFrecuente)
+            .filter_by(usuario_id=current_user.id)
+            .order_by(ProductoFrecuente.ultima_vez.desc(), ProductoFrecuente.veces.desc())
+            .limit(MAX_FRECUENTES * 2)
+        )
+        if f.clave not in en_lista
+    ][:MAX_FRECUENTES]
 
     return render_template(
         "compra/listado.html",
         form=form,
-        por_pasillo=por_pasillo,
+        lista=pendientes + tachados,
         num_pendientes=len(pendientes),
-        comprados=[i for i in items if i.comprado],
+        num_tachados=len(tachados),
         frecuentes=frecuentes,
         catalogo=CATALOGO,
         en_lista=en_lista,
@@ -196,6 +196,8 @@ def nuevo():
 def marcar(item_id):
     item = obtener_propio(ItemCompra, item_id)
     item.comprado = not item.comprado
+    if item.comprado:
+        _recordar_frecuente(item.nombre, contar=False)   # se guarda para la próxima compra
     db.session.commit()
     return redirect(url_for("compra.listado"))
 
@@ -217,7 +219,7 @@ def vaciar_comprados():
     ).rowcount
     db.session.commit()
     if borrados:
-        flash(f"Quitados {borrados} productos ya comprados 🛒", "info")
+        flash(f"Quitados {borrados} productos tachados. Los tienes en «Para la próxima» 🛒", "info")
     return redirect(url_for("compra.listado"))
 
 
