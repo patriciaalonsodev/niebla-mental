@@ -4,6 +4,8 @@
 #  Patricia Alonso · patriciaalonso.es
 # ══════════════════════════════════════════════════════════════
 
+from datetime import date
+
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
@@ -25,37 +27,26 @@ def _tarea_propia(tarea_id):
     return obtener_propio(Tarea, tarea_id)
 
 
-def _pintar_listado(form):
-    hoy = current_user.hoy()
+def _pintar_listado():
+    """Solo la lista: pendientes (las atrasadas y las de hoy primero) y,
+    debajo, las últimas hechas."""
     pendientes = db.session.scalars(
-        db.select(Tarea)
-        .filter_by(usuario_id=current_user.id, completada=False)
-        .order_by(Tarea.fecha.is_(None), Tarea.fecha, Tarea.creado_en)
+        db.select(Tarea).filter_by(usuario_id=current_user.id, completada=False)
     ).all()
+    pendientes.sort(key=lambda t: (t.fecha is None, t.fecha or date.max, t.creado_en))
     completadas = db.session.scalars(
         db.select(Tarea)
         .filter_by(usuario_id=current_user.id, completada=True)
         .order_by(Tarea.completada_en.desc())
         .limit(15)
     ).all()
-
-    grupos = {
-        "anteriores": [t for t in pendientes if t.fecha and t.fecha < hoy],
-        "hoy": [t for t in pendientes if t.fecha == hoy],
-        "proximas": [t for t in pendientes if t.fecha and t.fecha > hoy],
-        "sin_fecha": [t for t in pendientes if t.fecha is None],
-    }
-    # Cucharas de lo pendiente para hoy (incluye lo que quedó de días anteriores)
-    cucharas_hoy = sum(t.coste_energia or 0 for t in grupos["anteriores"] + grupos["hoy"])
-
     return render_template(
-        "tareas/listado.html",
-        form=form,
-        grupos=grupos,
-        completadas=completadas,
-        cucharas_hoy=cucharas_hoy,
-        hoy=hoy,
+        "tareas/listado.html", pendientes=pendientes, completadas=completadas, hoy=current_user.hoy(),
     )
+
+
+def _pintar_nueva(form):
+    return render_template("tareas/nueva.html", form=form)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -64,16 +55,21 @@ def _pintar_listado(form):
 
 @bp.get("/")
 def listado():
+    return _pintar_listado()
+
+
+@bp.get("/nueva")
+def formulario_nueva():
     form = FormularioTarea()
     form.fecha.data = current_user.hoy()  # por defecto, para hoy
-    return _pintar_listado(form)
+    return _pintar_nueva(form)
 
 
 @bp.post("/nueva")
 def nueva():
     form = FormularioTarea()
     if not form.validate_on_submit():
-        return _pintar_listado(form), 400
+        return _pintar_nueva(form), 400
 
     tarea = Tarea(usuario_id=current_user.id)
     form.populate_obj(tarea)

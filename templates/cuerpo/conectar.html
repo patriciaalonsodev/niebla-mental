@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "salud/_pestanas.html" import pestanas %}
+
+{% block titulo %}Conectar reloj y apps{% endblock %}
+
+{% block contenido %}
+  <h1>Salud</h1>
+  {{ pestanas("conectar") }}
+
+  <p class="subtitulo">Trae tus <strong>pasos, ejercicio y sueño</strong> del reloj o de las apps del móvil, sin apuntarlos a mano.</p>
+
+  {% include "perfil/_reloj.html" %}
+
+  <section class="panel">
+    <h2 class="titulo-panel">📱 ¿Con qué funciona?</h2>
+
+    <h3 class="subgrupo">iPhone → a través de Apple Salud</h3>
+    <p>Todo lo que llegue a la app <strong>Salud</strong> del iPhone se puede enviar aquí:</p>
+    <ul class="lista-apps">
+      <li>⌚ <strong>Apple Watch</strong></li>
+      <li>⌚ <strong>Garmin</strong> (desde Garmin Connect)</li>
+      <li>⌚ <strong>Xiaomi / Amazfit</strong> (desde Mi Fitness o Zepp)</li>
+      <li>⌚ <strong>Huawei</strong> (desde Huawei Salud)</li>
+      <li>💍 <strong>Oura</strong>, <strong>Withings</strong> y otras que sincronizan con Salud</li>
+    </ul>
+    <p class="ayuda">En cada app de la marca hay que activar «Sincronizar con Apple Salud». Después, una automatización de
+      <strong>Atajos</strong> lo envía aquí cada día: <a href="{{ url_for('perfil.guia_reloj') }}">guía paso a paso</a>.</p>
+
+    <h3 class="subgrupo">Android → a través de Health Connect</h3>
+    <p>Samsung Health, Fitbit, Pixel Watch, Xiaomi u Oura guardan los datos en <strong>Health Connect</strong>.
+      Una web no puede leer Health Connect directamente: de momento se puede con una app de automatización que lo lea y
+      lo envíe a la dirección de arriba con tu clave. Estamos preparando una forma más sencilla.</p>
+
+    <h3 class="subgrupo">Sin reloj</h3>
+    <p>Apunta tus pasos en <a href="{{ url_for('cuerpo.actividad') }}">Actividad</a> y tu noche en
+      <a href="{{ url_for('cuerpo.sueno') }}">Sueño</a>: con el 🎤 puedes dictarlo.</p>
+  </section>
+{% endblock %}

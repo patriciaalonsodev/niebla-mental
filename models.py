@@ -710,7 +710,11 @@ class Comida(MarcasTiempo, db.Model):
     fecha = db.Column(db.Date, nullable=False, index=True)
     momento = db.Column(db.String(15), nullable=False, default="comida")
     nombre = db.Column(db.String(160), nullable=False)
+    cantidad = db.Column(db.Float)                  # 1, 2, 3… (unidades o raciones)
     gramos = db.Column(db.Float)
+    # De dónde salen los valores: manual | alimento | ia | foto | etiqueta;
+    # vacío = sin datos (se apuntó solo qué se comió)
+    origen_datos = db.Column(db.String(10))
     kcal = db.Column(db.Float, nullable=False, default=0)
     proteinas = db.Column(db.Float, nullable=False, default=0)
     hidratos = db.Column(db.Float, nullable=False, default=0)
@@ -740,18 +744,20 @@ class RecetaGuardada(MarcasTiempo, db.Model):
 
 
 class UsoIA(db.Model):
-    """Cuántas veces al día se ha usado la IA (para limitar el gasto)."""
+    """Cuántas veces al día se ha usado la IA (para limitar el gasto).
+    tipo: «recetas» o «comidas» (cada uno con su límite)."""
 
     __tablename__ = "usos_ia"
 
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = _usuario_fk()
     fecha = db.Column(db.Date, nullable=False)
+    tipo = db.Column(db.String(10), nullable=False, default="recetas", server_default="recetas")
     veces = db.Column(db.Integer, nullable=False, default=0)
 
     usuario = db.relationship("Usuario", back_populates="usos_ia")
 
-    __table_args__ = (UniqueConstraint("usuario_id", "fecha", name="uq_uso_ia_dia"),)
+    __table_args__ = (UniqueConstraint("usuario_id", "fecha", "tipo", name="uq_uso_ia_dia_tipo"),)
 
 
 class RegistroPeso(MarcasTiempo, db.Model):

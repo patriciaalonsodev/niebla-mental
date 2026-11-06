@@ -13,7 +13,7 @@ Google Cloud. Tardas unos 10 minutos y solo hay que hacerlo una vez.
    La primera vez te pedirá aceptar las condiciones de Google Cloud.
 2. Arriba a la izquierda, junto al logo, pulsa el **selector de proyectos**
    y luego **Proyecto nuevo**.
-3. Nombre: `Niebla mental` (o el nombre final de la app). Pulsa **Crear**.
+3. Nombre: `Niebla Mental` (o el nombre final de la app). Pulsa **Crear**.
 4. Comprueba que arriba aparece seleccionado el proyecto nuevo.
 
 ## 2. Activar la API de Google Calendar
@@ -25,7 +25,7 @@ Google Cloud. Tardas unos 10 minutos y solo hay que hacerlo una vez.
 
 1. Menú ☰ → **APIs y servicios** → **Pantalla de consentimiento de OAuth**
    (puede aparecer como **Google Auth Platform**). Pulsa **Comenzar**.
-2. **Información de la app**: nombre `Niebla mental` y tu email de asistencia.
+2. **Información de la app**: nombre `Niebla Mental` y tu email de asistencia.
 3. **Público** (o «Audiencia»): elige **Externo**.
 4. **Información de contacto**: tu email. Acepta la política y pulsa **Crear**.
 5. En **Público**, debajo de **Usuarios de prueba**, pulsa **Añadir usuarios**
@@ -36,7 +36,7 @@ Google Cloud. Tardas unos 10 minutos y solo hay que hacerlo una vez.
 
 1. Ve a **Clientes** (o **APIs y servicios** → **Credenciales** →
    **Crear credenciales** → **ID de cliente de OAuth**).
-2. Tipo de aplicación: **Aplicación web**. Nombre: `Niebla mental (desarrollo)`.
+2. Tipo de aplicación: **Aplicación web**. Nombre: `Niebla Mental (desarrollo)`.
 3. En **URIs de redireccionamiento autorizados** añade estas dos:
    - `http://127.0.0.1:5050/google/vuelta`
    - `http://localhost:5050/google/vuelta`

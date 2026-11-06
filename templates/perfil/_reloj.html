@@ -33,6 +33,7 @@
     <form method="post" action="{{ url_for('perfil.clave_reloj') }}"
           {% if current_user.api_token_hash %}onsubmit="return confirm('¿Crear una clave nueva? La anterior dejará de funcionar y tendrás que cambiarla en Atajos.');"{% endif %}>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if volver %}<input type="hidden" name="volver" value="{{ volver }}">{% endif %}
       <button class="boton{% if current_user.api_token_hash %} boton-secundario{% endif %}" type="submit">
         {{ "Crear una clave nueva" if current_user.api_token_hash else "🔑 Crear mi clave" }}
       </button>
@@ -40,6 +41,7 @@
     {% if current_user.api_token_hash %}
       <form method="post" action="{{ url_for('perfil.quitar_reloj') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if volver %}<input type="hidden" name="volver" value="{{ volver }}">{% endif %}
         <button class="boton boton-secundario" type="submit">Desconectar</button>
       </form>
     {% endif %}

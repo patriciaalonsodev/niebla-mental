@@ -9,6 +9,12 @@
   <h1>Salud</h1>
   {{ pestanas("sueno") }}
 
+  {% if not current_user.api_token_hash %}
+    <a class="aviso-conectar" href="{{ url_for('cuerpo.conectar') }}">
+      ⌚ <span><strong>Conecta tu reloj o tus apps de salud</strong> para que esto se rellene solo.</span> ›
+    </a>
+  {% endif %}
+
   <section class="panel sueno-anoche" aria-label="Tu última noche">
     {% if anoche %}
       <p class="ayuda">{{ 'Anoche' if anoche.fecha == hoy else 'La noche anterior' }} {{ aviso_reloj(anoche.origen) }}</p>
@@ -28,7 +34,7 @@
         </ul>
       {% endif %}
     {% else %}
-      <p class="ayuda">Aún no hay datos de esta noche. Apúntala abajo o conecta tu reloj desde el Perfil.</p>
+      <p class="ayuda">Aún no hay datos de esta noche. Apúntala abajo o conecta tu reloj en «⌚ Conectar».</p>
     {% endif %}
   </section>
 

@@ -82,9 +82,18 @@
   {% else %}
     <section class="panel">
       <h2 class="titulo-panel">✨ Recetas con IA</h2>
-      <p>Para activarlas hace falta una clave de la API de Claude en el archivo <code>.env</code>
-        (<code>ANTHROPIC_API_KEY</code>). Es de pago por uso: unos céntimos por búsqueda.</p>
-      <p class="ayuda">Mientras tanto puedes guardar tus platos en <a href="{{ url_for('nutricion.alimentos') }}">Alimentos</a>.</p>
+      <p><strong>La IA todavía no está activada en esta app.</strong> Cuando lo esté, aquí podrás pedir recetas
+        y, al apuntar comidas, se calcularán solas las calorías y los macros (también con una foto).</p>
+      <details class="mas-opciones">
+        <summary>Si gestionas la app: cómo activarla</summary>
+        <ol class="guia-pasos">
+          <li>Crea una cuenta en <a href="https://platform.claude.com" rel="noopener" target="_blank">platform.claude.com</a>
+            y añade un método de pago (es de pago por uso: unos céntimos por búsqueda).</li>
+          <li>En <strong>API Keys</strong>, crea una clave y cópiala.</li>
+          <li>En <strong>Railway</strong> → servicio <em>niebla-mental</em> → <strong>Variables</strong> → <strong>New Variable</strong>:
+            nombre <code>ANTHROPIC_API_KEY</code> y como valor la clave. Guarda y espera a que se vuelva a publicar.</li>
+        </ol>
+      </details>
     </section>
   {% endif %}
 

@@ -6,6 +6,7 @@
          ('medicacion', 'medicacion.inicio', '💊', 'Medicación'),
          ('actividad', 'cuerpo.actividad', '👟', 'Actividad'),
          ('sueno', 'cuerpo.sueno', '😴', 'Sueño'),
+         ('conectar', 'cuerpo.conectar', '⌚', 'Conectar'),
        ] %}
       <a class="pestana{% if activa == clave %} pestana-activa{% endif %}" href="{{ url_for(endpoint) }}"
          {% if activa == clave %}aria-current="page"{% endif %}>

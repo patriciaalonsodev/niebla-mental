@@ -31,7 +31,7 @@ def _url_base_datos():
 
 class Config:
     # Nombre visible de la app: cámbialo aquí (o en el .env) y se actualiza en todas partes
-    APP_NOMBRE = os.environ.get("APP_NOMBRE", "Niebla mental")
+    APP_NOMBRE = os.environ.get("APP_NOMBRE", "Niebla Mental")
 
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = _url_base_datos()
@@ -51,6 +51,7 @@ class Config:
     # Recetas con IA (opcional): clave de la API de Claude y límite diario
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
     RECETAS_IA_AL_DIA = int(os.environ.get("RECETAS_IA_AL_DIA", 10))
+    COMIDAS_IA_AL_DIA = int(os.environ.get("COMIDAS_IA_AL_DIA", 40))
 
     # Tamaño máximo de lo que se sube (fotos): 8 MB
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024

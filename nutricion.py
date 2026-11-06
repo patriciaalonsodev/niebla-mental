@@ -149,42 +149,96 @@ def _opciones_alimentos(form):
     return alimentos
 
 
+MACROS_COMIDA = ("kcal", "proteinas", "hidratos", "grasas")
+
+
+def _numero_o_none(campo):
+    return float(campo.data) if campo.data is not None else None
+
+
 @bp.route("/anadir", methods=["GET", "POST"])
 def anadir():
     form = FormularioComida()
     alimentos = _opciones_alimentos(form)
     if request.method == "GET":
         form.fecha.data = _fecha_pedida()
+        form.cantidad.data = 1
         if request.args.get("momento") in MOMENTOS_COMIDA:
             form.momento.data = request.args["momento"]
-    elif form.validate_on_submit():
-        comida = Comida(usuario_id=current_user.id, fecha=form.fecha.data, momento=form.momento.data)
-        gramos = float(form.gramos.data) if form.gramos.data else None
-        if form.alimento.data:
-            alimento = obtener_propio(Alimento, form.alimento.data)
-            factor = gramos / 100
-            comida.nombre = alimento.nombre
-            comida.gramos = gramos
-            for clave in ("kcal", "proteinas", "hidratos", "grasas"):
-                setattr(comida, clave, round(getattr(alimento, clave) * factor, 1))
+        return _pintar_anadir(form, alimentos)
+    if not form.validate_on_submit():
+        return _pintar_anadir(form, alimentos), 400
+
+    cantidad = _numero_o_none(form.cantidad) or 1
+    gramos = _numero_o_none(form.gramos)
+    comida = Comida(usuario_id=current_user.id, fecha=form.fecha.data, momento=form.momento.data,
+                    cantidad=cantidad, gramos=gramos, nombre=form.nombre.data or "")
+    aviso = None
+
+    if form.alimento.data:
+        # 1. De «mis alimentos»: valores por 100 g × gramos
+        alimento = obtener_propio(Alimento, form.alimento.data)
+        gramos = gramos or ((alimento.racion_g or 0) * cantidad) or None
+        if not gramos:
+            form.gramos.errors.append("¿Cuántos gramos?")
+            return _pintar_anadir(form, alimentos), 400
+        comida.nombre, comida.gramos, comida.origen_datos = alimento.nombre, gramos, "alimento"
+        for clave in MACROS_COMIDA:
+            setattr(comida, clave, round(getattr(alimento, clave) * gramos / 100, 1))
+
+    elif form.kcal.data is not None:
+        # 2. Valores escritos a mano
+        comida.origen_datos = "manual"
+        for clave in MACROS_COMIDA:
+            setattr(comida, clave, _numero_o_none(getattr(form, clave)) or 0)
+        if form.guardar_alimento.data and gramos:
+            db.session.add(Alimento(
+                usuario_id=current_user.id, nombre=comida.nombre, racion_g=gramos / cantidad,
+                **{c: round(getattr(comida, c) * 100 / gramos, 1) for c in MACROS_COMIDA},
+            ))
+
+    elif recetas_ia.disponible():
+        # 3. La IA lo calcula (con lo escrito y/o la foto)
+        foto = None
+        if form.foto.data:
+            foto = recetas_ia.preparar_foto(form.foto.data.stream)
+            if foto is None:
+                form.foto.errors.append("No he podido leer esa foto. Prueba con otra.")
+                return _pintar_anadir(form, alimentos), 400
+        if _usos_hoy("comidas") >= current_app.config["COMIDAS_IA_AL_DIA"]:
+            aviso = "Hoy ya se ha calculado mucho con la IA: lo apunto sin calorías."
         else:
-            comida.nombre = form.nombre.data
-            comida.gramos = gramos
-            for clave in ("kcal", "proteinas", "hidratos", "grasas"):
-                valor = getattr(form, clave).data
-                setattr(comida, clave, float(valor) if valor is not None else 0)
-            if form.guardar_alimento.data and gramos:
-                # Guardar sus valores por 100 g para la próxima vez
-                factor = 100 / gramos
-                db.session.add(Alimento(
-                    usuario_id=current_user.id, nombre=comida.nombre, racion_g=gramos,
-                    **{c: round(getattr(comida, c) * factor, 1) for c in ("kcal", "proteinas", "hidratos", "grasas")},
-                ))
-        db.session.add(comida)
-        db.session.commit()
-        flash(f"Apuntado: {comida.nombre} ({comida.kcal:g} kcal) ✓", "exito")
-        return redirect(_url_dia(comida.fecha))
-    return render_template("nutricion/anadir.html", form=form, alimentos=alimentos), (400 if form.errors else 200)
+            _contar_uso("comidas")
+            try:
+                estimacion, origen = recetas_ia.estimar_comida(form.nombre.data, cantidad, gramos, foto)
+            except recetas_ia.ErrorRecetas as error:
+                aviso = f"{error} Lo apunto sin calorías; puedes volver a intentarlo."
+            else:
+                comida.nombre = form.nombre.data or estimacion.nombre
+                comida.gramos = gramos or estimacion.gramos_totales
+                comida.origen_datos = origen
+                for clave in MACROS_COMIDA:
+                    setattr(comida, clave, round(max(getattr(estimacion, clave), 0), 1))
+                aviso = estimacion.nota
+    else:
+        if form.foto.data:
+            form.foto.errors.append("Para leer fotos hace falta activar la IA (ver Recetas).")
+            return _pintar_anadir(form, alimentos), 400
+        aviso = "Apuntado sin calorías: para calcularlas sola, la app necesita la IA activada."
+
+    comida.nombre = (comida.nombre or "Comida")[:160]
+    db.session.add(comida)
+    db.session.commit()
+    texto = f"Apuntado: {comida.nombre}"
+    if comida.origen_datos:
+        texto += f" ({comida.kcal:g} kcal)"
+    flash(texto + " ✓" + (f" · {aviso}" if aviso else ""), "exito")
+    return redirect(_url_dia(comida.fecha))
+
+
+def _pintar_anadir(form, alimentos):
+    return render_template("nutricion/anadir.html", form=form, alimentos=alimentos,
+                           ia=recetas_ia.disponible())
 
 
 def _url_dia(fecha):
@@ -209,8 +263,8 @@ def repetir_comida(comida_id):
     hoy = current_user.hoy()
     db.session.add(Comida(
         usuario_id=current_user.id, fecha=hoy, momento=original.momento, nombre=original.nombre,
-        gramos=original.gramos, kcal=original.kcal, proteinas=original.proteinas,
-        hidratos=original.hidratos, grasas=original.grasas,
+        cantidad=original.cantidad, gramos=original.gramos, origen_datos=original.origen_datos,
+        kcal=original.kcal, proteinas=original.proteinas, hidratos=original.hidratos, grasas=original.grasas,
     ))
     db.session.commit()
     flash(f"Apuntado hoy: {original.nombre} ✓", "exito")
@@ -369,16 +423,17 @@ def borrar_peso(registro_id):
 
 
 
-def _usos_hoy():
-    uso = db.session.scalar(db.select(UsoIA).filter_by(usuario_id=current_user.id, fecha=current_user.hoy()))
+def _usos_hoy(tipo="recetas"):
+    uso = db.session.scalar(
+        db.select(UsoIA).filter_by(usuario_id=current_user.id, fecha=current_user.hoy(), tipo=tipo))
     return uso.veces if uso else 0
 
 
-def _contar_uso():
+def _contar_uso(tipo="recetas"):
     hoy = current_user.hoy()
-    uso = db.session.scalar(db.select(UsoIA).filter_by(usuario_id=current_user.id, fecha=hoy))
+    uso = db.session.scalar(db.select(UsoIA).filter_by(usuario_id=current_user.id, fecha=hoy, tipo=tipo))
     if uso is None:
-        uso = UsoIA(usuario_id=current_user.id, fecha=hoy, veces=0)
+        uso = UsoIA(usuario_id=current_user.id, fecha=hoy, tipo=tipo, veces=0)
         db.session.add(uso)
     uso.veces += 1
     db.session.commit()
@@ -468,7 +523,8 @@ def apuntar_receta():
         return redirect(url_for("nutricion.recetas"))
     db.session.add(Comida(
         usuario_id=current_user.id, fecha=current_user.hoy(), momento=momento,
-        nombre=f"{receta.titulo} (1 ración)"[:160], kcal=receta.kcal, proteinas=receta.proteinas,
+        nombre=f"{receta.titulo} (1 ración)"[:160], cantidad=1, origen_datos="ia",
+        kcal=receta.kcal, proteinas=receta.proteinas,
         hidratos=receta.hidratos, grasas=receta.grasas,
     ))
     db.session.commit()

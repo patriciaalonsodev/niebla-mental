@@ -88,11 +88,10 @@ def test_apuntar_comida_a_mano(cliente_con_sesion):
     assert "Apuntado: Lentejas" in texto and "Te quedan <strong>1110 kcal</strong>" in texto
 
 
-def test_comida_sin_calorias(cliente_con_sesion):
-    respuesta = _comer(cliente_con_sesion, kcal="")
-    assert respuesta.status_code == 400 and "Pon las calorías" in respuesta.get_data(as_text=True)
-    assert Comida.query.count() == 0
-
+def test_comida_sin_calorias_ya_no_es_obligatorio(cliente_con_sesion):
+    respuesta = _comer(cliente_con_sesion, kcal="", proteinas="", hidratos="", grasas="")
+    assert respuesta.status_code == 200
+    assert Comida.query.one().origen_datos is None          # apuntada, pero sin datos
 
 def test_guardar_como_alimento_y_reutilizar(cliente_con_sesion):
     _comer(cliente_con_sesion, nombre="Yogur griego", gramos="125", kcal="150", proteinas="5",
@@ -246,3 +245,103 @@ def test_receta_ajena(app):
     assert "Secreta" not in cliente.get("/nutricion/recetas").get_data(as_text=True)
     assert cliente.post("/nutricion/recetas/apuntar", data={"guardada": ajena.id}).status_code == 404
     assert cliente.post(f"/nutricion/recetas/{ajena.id}/borrar").status_code == 404
+
+
+# ── Apuntar con cantidad + alimento (la IA calcula) ───────────
+
+from io import BytesIO
+
+from PIL import Image
+
+
+def _foto():
+    datos = BytesIO()
+    Image.new("RGB", (900, 1200), (240, 230, 200)).save(datos, "JPEG")
+    datos.seek(0)
+    return datos
+
+
+class EstimadorFalso:
+    def __init__(self):
+        self.llamadas = []
+
+    def __call__(self, descripcion, cantidad=None, gramos=None, foto=None):
+        self.llamadas.append({"descripcion": descripcion, "cantidad": cantidad, "gramos": gramos, "foto": foto})
+        estimacion = recetas_ia.EstimacionComida(
+            nombre="Yogur griego natural", gramos_totales=250, kcal=300, proteinas=10, hidratos=10,
+            grasas=25, codigo_barras=None, fuente="estimacion", confianza="media",
+            nota="Calculado para 2 yogures de 125 g.",
+        )
+        return estimacion, ("foto" if foto else "ia")
+
+
+@pytest.fixture
+def estimador(app, monkeypatch):
+    app.config["ANTHROPIC_API_KEY"] = "clave-de-prueba"
+    falso = EstimadorFalso()
+    monkeypatch.setattr(recetas_ia, "estimar_comida", falso)
+    return falso
+
+
+def test_solo_cantidad_y_alimento_la_ia_calcula(cliente_con_sesion, estimador):
+    texto = cliente_con_sesion.post("/nutricion/anadir", data={
+        "fecha": _hoy().isoformat(), "momento": "merienda", "cantidad": "2", "nombre": "yogur griego",
+    }, follow_redirects=True).get_data(as_text=True)
+    comida = Comida.query.one()
+    assert (comida.nombre, comida.cantidad, comida.kcal, comida.origen_datos) == ("yogur griego", 2, 300, "ia")
+    assert estimador.llamadas[0]["cantidad"] == 2 and estimador.llamadas[0]["foto"] is None
+    assert "≈300" in texto and "2 × yogur griego" in texto and "Calculado para 2 yogures" in texto
+    assert UsoIA.query.filter_by(tipo="comidas").one().veces == 1
+
+
+def test_solo_con_foto(cliente_con_sesion, estimador):
+    cliente_con_sesion.post("/nutricion/anadir", data={
+        "fecha": _hoy().isoformat(), "momento": "comida", "cantidad": "1", "foto": (_foto(), "plato.jpg"),
+    }, content_type="multipart/form-data")
+    comida = Comida.query.one()
+    assert (comida.nombre, comida.origen_datos) == ("Yogur griego natural", "foto")
+    foto = estimador.llamadas[0]["foto"]
+    assert foto[1] == "image/jpeg" and max(Image.open(BytesIO(foto[0])).size) <= recetas_ia.LADO_MAXIMO_FOTO
+
+
+def test_sin_ia_se_apunta_sin_datos(cliente_con_sesion):
+    texto = cliente_con_sesion.post("/nutricion/anadir", data={
+        "fecha": _hoy().isoformat(), "momento": "cena", "cantidad": "1", "nombre": "tortilla de patatas",
+    }, follow_redirects=True).get_data(as_text=True)
+    comida = Comida.query.one()
+    assert (comida.nombre, comida.origen_datos, comida.kcal) == ("tortilla de patatas", None, 0)
+    assert "sin datos" in texto and "sin calorías" in texto
+
+
+def test_foto_sin_ia_avisa(cliente_con_sesion):
+    respuesta = cliente_con_sesion.post("/nutricion/anadir", data={
+        "fecha": _hoy().isoformat(), "momento": "cena", "foto": (_foto(), "plato.jpg"),
+    }, content_type="multipart/form-data")
+    assert respuesta.status_code == 400 and "hace falta activar la IA" in respuesta.get_data(as_text=True)
+
+
+def test_hace_falta_algo(cliente_con_sesion):
+    respuesta = cliente_con_sesion.post("/nutricion/anadir", data={"fecha": _hoy().isoformat(), "momento": "cena"})
+    assert respuesta.status_code == 400 and "Escribe qué has comido, haz una foto" in respuesta.get_data(as_text=True)
+
+
+def test_si_la_ia_falla_se_apunta_igual(cliente_con_sesion, app, monkeypatch):
+    app.config["ANTHROPIC_API_KEY"] = "clave-de-prueba"
+
+    def falla(*_a, **_k):
+        raise recetas_ia.ErrorRecetas("No hay conexión con la IA.")
+    monkeypatch.setattr(recetas_ia, "estimar_comida", falla)
+    texto = cliente_con_sesion.post("/nutricion/anadir", data={
+        "fecha": _hoy().isoformat(), "momento": "cena", "nombre": "sopa",
+    }, follow_redirects=True).get_data(as_text=True)
+    assert Comida.query.one().origen_datos is None and "No hay conexión" in texto
+
+
+def test_aviso_de_plan_es_general(cliente_con_sesion):
+    texto = cliente_con_sesion.get("/nutricion/plan").get_data(as_text=True)
+    assert "fibromialgia" not in texto.lower() and "alguna enfermedad" in texto
+
+
+def test_aviso_de_ia_sin_activar_es_claro(cliente_con_sesion):
+    texto = cliente_con_sesion.get("/nutricion/recetas").get_data(as_text=True)
+    assert "todavía no está activada" in texto and "Railway" in texto and ".env" not in texto

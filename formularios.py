@@ -454,6 +454,8 @@ class FormularioPlanNutricion(FlaskForm):
 
 
 class FormularioComida(FlaskForm):
+    """Lo mínimo: cantidad + (gramos si se saben) + qué se ha comido, o
+    una foto. La IA calcula el resto. Los valores a mano son opcionales."""
     fecha = DateField("Día", validators=[DataRequired()])
     momento = SelectField("¿Cuándo?", choices=[
         SelectChoice("desayuno", "☕ Desayuno"),
@@ -463,9 +465,14 @@ class FormularioComida(FlaskForm):
         SelectChoice("cena", "🌙 Cena"),
         SelectChoice("picoteo", "🍫 Picoteo"),
     ], default="comida")
-    alimento = SelectField("De mis alimentos", coerce=_entero_o_nada, validate_choice=False, default="")
-    gramos = _numero("Cantidad (g)", 5000)
+    cantidad = _numero("Cantidad", 100, description="1, 2, 3… (unidades o raciones)")
+    gramos = _numero("Gramos", 5000, description="Si los sabes")
     nombre = StringField("¿Qué has comido?", filters=[_limpiar_texto], validators=[Optional(), Length(max=160)])
+    foto = FileField("📷 Foto del plato, del envase o de la etiqueta", validators=[
+        FileAllowed(["jpg", "jpeg", "png", "webp", "heic", "heif"], "Tiene que ser una foto."),
+    ])
+    alimento = SelectField("O elige de tus alimentos", coerce=_entero_o_nada, validate_choice=False, default="")
+    # Valores a mano (opcionales, para quien los sepa)
     kcal = _numero("Calorías", 10000)
     proteinas = _numero("Proteínas (g)", 1000)
     hidratos = _numero("Hidratos (g)", 1000)
@@ -475,19 +482,10 @@ class FormularioComida(FlaskForm):
     def validate(self, extra_validators=None):
         if not super().validate(extra_validators):
             return False
-        if self.alimento.data:
-            if not self.gramos.data:
-                self.gramos.errors.append("¿Cuántos gramos?")
-                return False
-            return True
-        ok = True
-        if not self.nombre.data:
-            self.nombre.errors.append("Escribe qué has comido o elige uno de tus alimentos.")
-            ok = False
-        if self.kcal.data is None:
-            self.kcal.errors.append("Pon las calorías (aunque sea aproximadas).")
-            ok = False
-        return ok
+        if not (self.alimento.data or self.nombre.data or self.foto.data):
+            self.nombre.errors.append("Escribe qué has comido, haz una foto o elige uno de tus alimentos.")
+            return False
+        return True
 
 
 class FormularioAlimento(FlaskForm):

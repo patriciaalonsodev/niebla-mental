@@ -6,7 +6,7 @@
 
 from io import BytesIO
 
-from flask import Blueprint, abort, flash, redirect, render_template, send_file, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -141,6 +141,9 @@ def clave_reloj():
     respuesta: no se guarda en claro en ningún sitio."""
     clave = crear_clave(current_user)
     db.session.commit()
+    if request.form.get("volver") == "salud":
+        from cuerpo import pintar_conectar
+        return pintar_conectar(clave_nueva=clave)
     return _pintar(FormularioPerfil(obj=current_user), clave_nueva=clave)
 
 
@@ -150,6 +153,8 @@ def quitar_reloj():
     current_user.api_token_creado = None
     db.session.commit()
     flash("Reloj desconectado: la clave ya no sirve. Tus datos se quedan.", "info")
+    if request.form.get("volver") == "salud":
+        return redirect(url_for("cuerpo.conectar"))
     return redirect(url_for("perfil.inicio"))
 
 

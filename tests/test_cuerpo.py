@@ -184,3 +184,14 @@ def test_cada_clave_es_de_su_dueña(app):
 def test_guia(cliente_con_sesion):
     texto = cliente_con_sesion.get("/perfil/reloj/guia").get_data(as_text=True)
     assert "Atajos" in texto and "http://localhost/api/salud" in texto and "Bearer" in texto
+
+
+def test_conectar_en_salud(cliente_con_sesion):
+    texto = cliente_con_sesion.get("/salud/actividad").get_data(as_text=True)
+    assert "Conecta tu reloj o tus apps de salud" in texto and 'href="/salud/conectar"' in texto
+    texto = cliente_con_sesion.get("/salud/conectar").get_data(as_text=True)
+    assert "Apple Watch" in texto and "Garmin" in texto and "Health Connect" in texto
+    # Crear la clave desde Salud se queda en Salud
+    texto = cliente_con_sesion.post("/perfil/reloj/clave", data={"volver": "salud"}).get_data(as_text=True)
+    assert 'id="clave"' in texto and "¿Con qué funciona?" in texto
+    assert "Conecta tu reloj o tus apps" not in cliente_con_sesion.get("/salud/actividad").get_data(as_text=True)

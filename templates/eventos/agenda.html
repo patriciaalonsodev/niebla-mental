@@ -21,13 +21,6 @@
     {% if not es_pagina_de_hoy %}
       <a class="boton boton-secundario boton-pequeno" href="{{ url_for('eventos.agenda') }}">Hoy</a>
     {% endif %}
-    <span class="agenda-dias-elegir" role="group" aria-label="Días por página">
-      {% for opcion in (2, 3) %}
-        <a class="chip{% if n == opcion %} chip-activo{% endif %}"
-           href="{{ url_for('eventos.agenda', dias=opcion, desde=dias[0].fecha.isoformat() if not es_pagina_de_hoy else None) }}"
-           {% if n == opcion %}aria-current="true"{% endif %}>{{ opcion }} días</a>
-      {% endfor %}
-    </span>
     <a class="boton boton-secundario boton-pequeno" href="{{ url_for('eventos.agenda', desde=siguiente.isoformat()) }}"
        aria-label="Días siguientes">›</a>
   </nav>

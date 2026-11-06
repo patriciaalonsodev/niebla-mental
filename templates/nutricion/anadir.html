@@ -8,20 +8,42 @@
 
   <section class="panel">
     <h1>Apuntar comida</h1>
-    <form method="post" action="{{ url_for('nutricion.anadir') }}" novalidate class="formulario formulario-comida">
+    <form method="post" action="{{ url_for('nutricion.anadir') }}" enctype="multipart/form-data"
+          novalidate class="formulario formulario-comida" id="form-comida">
       {{ form.hidden_tag() }}
       {{ campo(form.momento) }}
       {{ campo(form.fecha) }}
 
-      {% if alimentos %}
-        {{ campo(form.alimento) }}
-      {% endif %}
-      {{ campo(form.gramos, autocomplete="off") }}
+      {# Lo único necesario: cantidad + gramos (si se saben) + qué es #}
+      <div class="comida-rapida">
+        <div class="campo campo-cantidad-comida{% if form.cantidad.errors %} campo-con-error{% endif %}">
+          {{ form.cantidad.label }}{{ form.cantidad(autocomplete="off", placeholder="1") }}
+        </div>
+        <div class="campo campo-gramos{% if form.gramos.errors %} campo-con-error{% endif %}">
+          {{ form.gramos.label }}{{ form.gramos(autocomplete="off", placeholder="opcional") }}
+        </div>
+      </div>
+      {% for error in form.cantidad.errors + form.gramos.errors %}<p class="error">{{ error }}</p>{% endfor %}
+      {{ campo(form.nombre, autocomplete="off") }}
 
-      {# Solo hace falta si no se elige uno de «mis alimentos» #}
-      <fieldset class="a-mano">
-        <legend>Escribirlo a mano <span class="ayuda">(los valores de lo que has comido)</span></legend>
-        {{ campo(form.nombre, autocomplete="off") }}
+      <div class="campo foto-comida{% if form.foto.errors %} campo-con-error{% endif %}">
+        <label class="boton boton-secundario boton-ancho" for="{{ form.foto.id }}">📷 Hacer o elegir una foto</label>
+        {{ form.foto(accept="image/*", class="solo-lectores") }}
+        <p class="ayuda" id="foto-elegida">Del plato, del envase o de la tabla nutricional: la IA saca los datos.</p>
+        {% for error in form.foto.errors %}<p class="error">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% if alimentos %}{{ campo(form.alimento) }}{% endif %}
+
+      <button class="boton boton-ancho" type="submit" id="boton-apuntar">Apuntar</button>
+      {% if ia %}
+        <p class="ayuda">✨ La IA calcula las calorías y los macros. Son aproximados.</p>
+      {% else %}
+        <p class="ayuda">ℹ️ La IA aún no está activada en esta app: se apuntará lo que has comido, pero sin calorías.</p>
+      {% endif %}
+
+      <details class="mas-opciones">
+        <summary>Sé los valores exactos</summary>
         <div class="campos-fila campos-fila-2">
           {{ campo(form.kcal, autocomplete="off") }}
           {{ campo(form.proteinas, autocomplete="off") }}
@@ -29,13 +51,20 @@
           {{ campo(form.grasas, autocomplete="off") }}
         </div>
         {{ casilla(form.guardar_alimento) }}
-      </fieldset>
-
-      <button class="boton boton-ancho" type="submit">Apuntar</button>
+      </details>
     </form>
-    {% if not alimentos %}
-      <p class="ayuda">💡 Si guardas tus alimentos habituales en <a href="{{ url_for('nutricion.alimentos') }}">Alimentos</a>,
-        luego solo tendrás que elegirlos y poner los gramos.</p>
-    {% endif %}
   </section>
+
+  <script>
+    // Mostrar qué foto se ha elegido, y que se note que la IA está pensando
+    const foto = document.getElementById("{{ form.foto.id }}");
+    foto.addEventListener("change", () => {
+      if (foto.files.length) document.getElementById("foto-elegida").textContent = "✓ Foto elegida: " + foto.files[0].name;
+    });
+    document.getElementById("form-comida").addEventListener("submit", () => {
+      const boton = document.getElementById("boton-apuntar");
+      boton.disabled = true;
+      boton.textContent = {{ "'✨ Calculando…'" if ia else "'Apuntando…'" }};
+    });
+  </script>
 {% endblock %}

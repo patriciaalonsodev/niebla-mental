@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "tareas/_macros.html" import formulario_tarea %}
+
+{% block titulo %}Nueva tarea{% endblock %}
+
+{% block contenido %}
+  <p class="volver"><a href="{{ url_for('tareas.listado') }}">← Tareas</a></p>
+
+  <section class="panel">
+    <h1>Nueva tarea</h1>
+    {{ formulario_tarea(form, url_for('tareas.nueva'), "Apuntar tarea") }}
+  </section>
+{% endblock %}

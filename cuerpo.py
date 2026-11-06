@@ -271,3 +271,23 @@ def guardar_sueno_manual():
     db.session.commit()
     flash("Noche guardada ✓ " + (f"Has dormido {horas_y_minutos(minutos)}." if minutos else ""), "exito")
     return redirect(url_for("cuerpo.sueno"))
+
+
+# ──────────────────────────────────────────────────────────────
+# Conectar el reloj y las apps de salud
+# ──────────────────────────────────────────────────────────────
+
+def pintar_conectar(clave_nueva=None):
+    from perfil import _ultimo_envio_del_reloj
+    return render_template(
+        "cuerpo/conectar.html",
+        clave_nueva=clave_nueva,
+        url_api=url_for("api_salud.recibir", _external=True),
+        ultimo_envio=_ultimo_envio_del_reloj(),
+        volver="salud",
+    )
+
+
+@bp.get("/conectar")
+def conectar():
+    return pintar_conectar()

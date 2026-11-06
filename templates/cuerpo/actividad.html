@@ -9,6 +9,12 @@
   <h1>Salud</h1>
   {{ pestanas("actividad") }}
 
+  {% if not current_user.api_token_hash %}
+    <a class="aviso-conectar" href="{{ url_for('cuerpo.conectar') }}">
+      ⌚ <span><strong>Conecta tu reloj o tus apps de salud</strong> para que esto se rellene solo.</span> ›
+    </a>
+  {% endif %}
+
   {# Hoy: los pasos en grande #}
   <section class="panel pasos-hoy" aria-label="Pasos de hoy">
     <div class="anillo" style="--progreso: {{ por_ciento }}" role="img"
@@ -25,7 +31,7 @@
         {% if de_hoy.distancia_km %}<p>📍 <strong>{{ de_hoy.distancia_km|kg }}</strong> km</p>{% endif %}
         <p>{{ aviso_reloj(de_hoy.origen) }}</p>
       {% else %}
-        <p class="ayuda">Aún no hay pasos de hoy. Apúntalos abajo o conecta tu reloj desde el Perfil.</p>
+        <p class="ayuda">Aún no hay pasos de hoy. Apúntalos abajo o conecta tu reloj en «⌚ Conectar».</p>
       {% endif %}
       {% if pasos_hoy >= objetivo %}<p class="logro">🎉 ¡Objetivo cumplido!</p>{% endif %}
     </div>

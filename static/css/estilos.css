@@ -1699,3 +1699,60 @@ a.boton-redondo { text-decoration: none; }
 
 /* En el diario de papel, el micro con aspecto de papel */
 .hoja-escribir .dictado-boton { background: rgb(255 255 255 / 0.7); border-color: var(--papel-sombra); }
+.agenda-paginas > .boton:last-child { margin-left: auto; }
+
+/* ── Tareas: una sola lista ───────────────────────────────── */
+.lista-unica { margin-top: 1rem; }
+.tarea-enlace { color: var(--texto); text-decoration: none; padding: 0.6rem 0; }
+.tarea-cuando { flex: none; font-size: 0.82rem; color: var(--texto-suave); padding-right: 0.4rem; }
+.tarea-hoy { color: var(--lavanda); font-weight: 700; }
+.tarea-atrasada { color: var(--nivel-regular); }
+
+/* Diario: el texto en letra clara y grande (más fácil de leer con
+   niebla mental); la letra a mano queda solo para la fecha.        */
+.hoja-diario {
+  font-family: inherit;
+  font-size: 1.15rem;
+  --alto-renglon: 2.3rem;
+}
+.hoja-fecha, .hoja-campo-fecha { font-family: var(--letra-mano); font-size: 1.1rem; }
+.hoja-texto, .hoja-campo-texto { font-size: 1.15rem; letter-spacing: 0.01em; }
+.hoja-pregunta { font-size: 1.05rem; }
+.compra-separador {
+  padding: 0.35rem 0.8rem 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  background: rgb(10 5 25 / 0.18);
+  border-bottom: 1px solid var(--borde);
+}
+
+/* Apuntar comida: cantidad y gramos en una fila */
+.comida-rapida { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 0.6rem; }
+.comida-rapida .campo { margin-bottom: 0; min-width: 0; }
+.foto-comida label { cursor: pointer; }
+.foto-comida:focus-within label { outline: 3px solid var(--lavanda-clara); outline-offset: 3px; }
+.sin-datos { font-size: 0.8rem; color: var(--texto-suave); font-style: italic; }
+.guia-pasos { padding-left: 1.3rem; display: grid; gap: 0.5rem; }
+.aviso-conectar {
+  display: flex; align-items: center; gap: 0.7rem; margin: 0 0 1rem; padding: 0.8rem 1rem;
+  border-radius: 16px; border: 1px solid var(--lavanda); background: rgb(201 182 247 / 0.10);
+  color: var(--texto); text-decoration: none; font-size: 1.3rem;
+}
+.aviso-conectar span { flex: 1; font-size: 0.95rem; }
+.lista-apps { list-style: none; padding: 0; margin: 0.4rem 0; display: grid; gap: 0.35rem; }
+.marca-logo { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 2px 6px rgb(10 5 25 / 0.5)); }
+
+/* Diario: letra a mano legible (Patrick Hand, licencia OFL, guardada
+   en la app: se ve igual en todos los dispositivos y no llama a nadie) */
+@font-face {
+  font-family: "Patrick Hand";
+  src: url("../fuentes/PatrickHand-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+:root { --letra-mano: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive; }
+.hoja-diario { font-family: var(--letra-mano); font-size: 1.3rem; --alto-renglon: 2.35rem; }
+.hoja-texto, .hoja-campo-texto { font-size: 1.3rem; letter-spacing: 0.02em; }
+.hoja-fecha, .hoja-campo-fecha { font-size: 1.3rem; }
+.hoja-pregunta { font-size: 1.2rem; }
+.hoja-diario .boton, .hoja-diario .error { font-family: system-ui, sans-serif; font-size: 1rem; }

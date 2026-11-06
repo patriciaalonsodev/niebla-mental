@@ -81,6 +81,7 @@ def create_app(nombre_config=None):
             "nombre_app": app.config["APP_NOMBRE"],
             "seccion_activa": SECCION_DE.get(request.blueprint, "inicio"),
             "volver_inicio": request.endpoint in LISTADOS_CON_VOLVER,
+            "logo_url": _url_logo(app),
         }
 
     _registrar_rutas_basicas(app)
@@ -121,6 +122,15 @@ def _validar_configuracion(app):
 # ──────────────────────────────────────────────────────────────
 # Rutas básicas (las secciones irán en blueprints)
 # ──────────────────────────────────────────────────────────────
+
+def _url_logo(app):
+    """El logo, si está guardado en static/img/logo.png (con ?v= para que
+    el navegador lo actualice cuando cambie)."""
+    ruta = os.path.join(app.static_folder, "img", "logo-64.png")
+    if not os.path.exists(ruta):
+        return None
+    return url_for("static", filename="img/logo-64.png", v=int(os.path.getmtime(ruta)))
+
 
 # Qué icono de la barra de navegación se ilumina en cada parte de la app
 SECCION_DE = {

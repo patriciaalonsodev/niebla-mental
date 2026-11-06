@@ -46,10 +46,14 @@
           <ul class="compra-filas">
             {% for c in comidas %}
               <li class="compra-fila comida-fila">
-                <span class="compra-nombre">{{ c.nombre }}{% if c.gramos %} <span class="ayuda">· {{ c.gramos|kg }} g</span>{% endif %}</span>
-                <span class="comida-macros" aria-label="{{ c.kcal|round|int }} kilocalorías, {{ c.proteinas|round|int }} gramos de proteína, {{ c.hidratos|round|int }} de hidratos y {{ c.grasas|round|int }} de grasas">
-                  <strong>{{ c.kcal|round|int }}</strong> · P{{ c.proteinas|round|int }} H{{ c.hidratos|round|int }} G{{ c.grasas|round|int }}
-                </span>
+                <span class="compra-nombre">{% if c.cantidad and c.cantidad != 1 %}{{ c.cantidad|kg }} × {% endif %}{{ c.nombre }}{% if c.gramos %} <span class="ayuda">· {{ c.gramos|kg }} g</span>{% endif %}</span>
+                {% if c.origen_datos %}
+                  <span class="comida-macros" aria-label="{{ 'Aproximadamente ' if c.origen_datos in ('ia', 'foto') }}{{ c.kcal|round|int }} kilocalorías, {{ c.proteinas|round|int }} gramos de proteína, {{ c.hidratos|round|int }} de hidratos y {{ c.grasas|round|int }} de grasas">
+                    <strong>{{ '≈' if c.origen_datos in ('ia', 'foto') }}{{ c.kcal|round|int }}</strong> · P{{ c.proteinas|round|int }} H{{ c.hidratos|round|int }} G{{ c.grasas|round|int }}
+                  </span>
+                {% else %}
+                  <span class="sin-datos">sin datos</span>
+                {% endif %}
                 {% if fecha != hoy %}
                   <form method="post" action="{{ url_for('nutricion.repetir_comida', comida_id=c.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

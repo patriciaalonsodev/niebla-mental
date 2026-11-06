@@ -39,14 +39,11 @@ def test_agenda_es_una_pagina_de_3_dias(cliente_con_sesion):
     assert "lunes 9" not in texto
 
 
-def test_pasar_paginas_y_elegir_2_dias(cliente_con_sesion):
+def test_pasar_paginas(cliente_con_sesion):
     texto = cliente_con_sesion.get("/eventos/?desde=2026-11-09").get_data(as_text=True)
     assert "Añadir algo el lunes 9 de noviembre" in texto and 'href="/eventos/?desde=2026-11-06"' in texto
-    texto = cliente_con_sesion.get("/eventos/?dias=2").get_data(as_text=True)
-    assert texto.count('class="dia-libreta') == 2
-    texto = cliente_con_sesion.get("/eventos/").get_data(as_text=True)    # se recuerda
-    assert texto.count('class="dia-libreta') == 2
-
+    assert "2 días" not in texto                                   # siempre 3 días
+    assert texto.count('class="dia-libreta') == 3
 
 def test_formulario_nuevo(cliente_con_sesion):
     texto = cliente_con_sesion.get("/eventos/nuevo").get_data(as_text=True)

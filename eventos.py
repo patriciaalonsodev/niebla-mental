@@ -7,7 +7,7 @@
 from datetime import date, time, timedelta
 from itertools import groupby
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
@@ -59,14 +59,6 @@ def proximos_para_inicio():
     ]
 
 
-def _dias_por_pagina():
-    """2 o 3 días por página; se recuerda la elección."""
-    pedido = request.args.get("dias")
-    if pedido in ("2", "3"):
-        session["dias_agenda"] = int(pedido)
-    return session.get("dias_agenda", DIAS_POR_PAGINA)
-
-
 def _pagina_agenda():
     """Los días que se ven en la página, como en una agenda de papel."""
     hoy = current_user.hoy()
@@ -74,7 +66,7 @@ def _pagina_agenda():
         desde = date.fromisoformat(request.args.get("desde", ""))
     except ValueError:
         desde = hoy
-    n = _dias_por_pagina()
+    n = DIAS_POR_PAGINA
     eventos = _eventos_entre(desde, desde + timedelta(days=n - 1))
     dias = []
     for d in (desde + timedelta(days=k) for k in range(n)):

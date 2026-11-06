@@ -63,10 +63,13 @@
   {% if por_pasillo %}
     <section class="compra-lista" aria-label="Por comprar">
       <h2 class="compra-titulo">Por comprar <span class="contador">{{ num_pendientes }}</span></h2>
-      {% for pasillo, items in por_pasillo %}
-        <h3 class="compra-pasillo">{{ pasillo }}</h3>
-        <ul class="compra-filas">{% for item in items %}{{ fila(item) }}{% endfor %}</ul>
-      {% endfor %}
+      {# Una sola lista; el pasillo es solo una línea pequeña dentro #}
+      <ul class="compra-filas lista-unica">
+        {% for pasillo, items in por_pasillo %}
+          <li class="compra-separador" aria-hidden="true">{{ pasillo }}</li>
+          {% for item in items %}{{ fila(item) }}{% endfor %}
+        {% endfor %}
+      </ul>
     </section>
   {% elif not comprados %}
     <p class="vacio">La lista está vacía. Toca abajo lo que te falte 🛒</p>

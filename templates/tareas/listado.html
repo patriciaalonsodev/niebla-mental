@@ -1,53 +1,44 @@
 {% extends "base.html" %}
-{% from "tareas/_macros.html" import formulario_tarea, fila_tarea %}
 
 {% block titulo %}Tareas{% endblock %}
 
-{% block contenido %}
-  <div class="cabecera-seccion">
-    <div>
-      <h1>Tareas</h1>
-      <p class="subtitulo">Una cosa cada vez. Lo que no dé tiempo, pasa a mañana.</p>
-    </div>
-    {% if cucharas_hoy %}
-      <p class="resumen-cucharas">
-        Hoy: <strong>{{ cucharas_hoy }}</strong> 🥄
-      </p>
+{# Una tarea: el círculo la marca como hecha o pendiente #}
+{% macro fila(tarea) %}
+  <li class="compra-fila tarea-fila{% if tarea.completada %} compra-hecha{% endif %}">
+    <form method="post" action="{{ url_for('tareas.completar', tarea_id=tarea.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="compra-check" type="submit"
+              aria-label="{{ 'Marcar como pendiente' if tarea.completada else 'Marcar como hecha' }}: {{ tarea.titulo }}">
+        <span aria-hidden="true">{{ '✓' if tarea.completada else '' }}</span>
+      </button>
+    </form>
+    <a class="compra-nombre tarea-enlace" href="{{ url_for('tareas.editar', tarea_id=tarea.id) }}">{{ tarea.titulo }}</a>
+    {% if not tarea.completada and tarea.fecha %}
+      <span class="tarea-cuando{% if tarea.fecha < hoy %} tarea-atrasada{% elif tarea.fecha == hoy %} tarea-hoy{% endif %}">
+        {%- if tarea.fecha == hoy %}Hoy{% elif tarea.fecha < hoy %}{{ tarea.fecha|fecha_corta }} ⚠️{% else %}{{ tarea.fecha|fecha_corta }}{% endif -%}
+      </span>
     {% endif %}
+  </li>
+{% endmacro %}
+
+{% block contenido %}
+  <div class="agenda-cabecera">
+    <h1>Tareas</h1>
+    <a class="boton boton-pequeno" href="{{ url_for('tareas.formulario_nueva') }}">＋ Nueva</a>
   </div>
 
-  <section class="panel">
-    <h2 class="titulo-panel">Nueva tarea</h2>
-    {{ formulario_tarea(form, url_for('tareas.nueva'), "Apuntar tarea") }}
-  </section>
-
-  {% set titulos = {
-    "anteriores": "De días anteriores",
-    "hoy": "Hoy",
-    "proximas": "Próximos días",
-    "sin_fecha": "Cuando puedas",
-  } %}
-
-  {% set hay_pendientes = grupos.values()|map('length')|sum %}
-  {% if not hay_pendientes %}
+  {% if pendientes %}
+    <ul class="compra-filas lista-unica" aria-label="Pendientes">
+      {% for tarea in pendientes %}{{ fila(tarea) }}{% endfor %}
+    </ul>
+  {% else %}
     <p class="vacio">No tienes tareas pendientes. ¡A descansar! 💜</p>
   {% endif %}
 
-  {% for clave, titulo in titulos.items() if grupos[clave] %}
-    <section class="grupo-tareas">
-      <h2>{{ titulo }} <span class="contador">{{ grupos[clave]|length }}</span></h2>
-      <ul class="lista-tareas">
-        {% for tarea in grupos[clave] %}{{ fila_tarea(tarea, hoy) }}{% endfor %}
-      </ul>
-    </section>
-  {% endfor %}
-
   {% if completadas %}
-    <details class="grupo-tareas hechas">
-      <summary><h2>Hechas <span class="contador">{{ completadas|length }}</span></h2></summary>
-      <ul class="lista-tareas">
-        {% for tarea in completadas %}{{ fila_tarea(tarea, hoy) }}{% endfor %}
-      </ul>
-    </details>
+    <h2 class="compra-titulo">Hechas</h2>
+    <ul class="compra-filas lista-unica" aria-label="Hechas">
+      {% for tarea in completadas %}{{ fila(tarea) }}{% endfor %}
+    </ul>
   {% endif %}
 {% endblock %}

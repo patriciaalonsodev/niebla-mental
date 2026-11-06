@@ -40,7 +40,7 @@ def test_apuntar_tarea_con_cucharas(cliente_con_sesion):
     assert tarea.coste_energia == 3
     assert tarea.fecha == hoy
     assert "Llamar al médico" in texto
-    assert "Hoy: <strong>3</strong>" in texto
+    assert "Hoy" in texto
 
 
 def test_apuntar_sin_cucharas_ni_fecha(cliente_con_sesion):
@@ -63,15 +63,21 @@ def test_cucharas_fuera_de_rango(cliente_con_sesion):
     assert Tarea.query.count() == 0
 
 
-def test_grupos_por_fecha(cliente_con_sesion):
-    hoy = _patz().hoy()
-    _apuntar(cliente_con_sesion, titulo="Ayer", fecha=(hoy - timedelta(days=1)).isoformat(), coste_energia="2")
-    _apuntar(cliente_con_sesion, titulo="Mañana", fecha=(hoy + timedelta(days=1)).isoformat(), coste_energia="4")
+def test_lista_primero_y_orden(cliente_con_sesion):
+    hoy = db.session.scalar(db.select(Usuario)).hoy()
+    for titulo, fecha in (("Sin fecha", None), ("Mañana", hoy + timedelta(days=1)),
+                          ("Ayer", hoy - timedelta(days=1)), ("Hoy mismo", hoy)):
+        db.session.add(Tarea(usuario=db.session.scalar(db.select(Usuario)), titulo=titulo, fecha=fecha))
+    db.session.commit()
     texto = cliente_con_sesion.get("/tareas/").get_data(as_text=True)
-    assert "De días anteriores" in texto
-    assert "Próximos días" in texto
-    assert "Hoy: <strong>2</strong>" in texto   # lo de ayer cuenta para hoy; lo de mañana, no
+    # Atrasadas, hoy, próximas y sin fecha; y nada de formulario en la lista
+    assert texto.index("Ayer") < texto.index("Hoy mismo") < texto.index("Mañana") < texto.index("Sin fecha")
+    assert "Apuntar tarea" not in texto and 'href="/tareas/nueva"' in texto
 
+
+def test_pagina_nueva_tarea(cliente_con_sesion):
+    texto = cliente_con_sesion.get("/tareas/nueva").get_data(as_text=True)
+    assert "Nueva tarea" in texto and "Apuntar tarea" in texto
 
 def test_completar_y_desmarcar(cliente_con_sesion):
     _apuntar(cliente_con_sesion)
