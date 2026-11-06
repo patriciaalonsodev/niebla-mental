@@ -1825,3 +1825,30 @@ a.boton-redondo { text-decoration: none; }
 /* El icono de la sección junto a su título */
 .titulo-con-icono { display: flex; align-items: center; gap: 0.6rem; }
 .titulo-con-icono img { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 3px 6px rgb(10 5 25 / 0.45)); }
+
+/* ── Guía paso a paso (Atajos) ────────────────────────────── */
+.guia-parte > summary { cursor: pointer; }
+.pasos-guia { list-style: none; margin: 0.8rem 0 0; padding: 0; display: grid; gap: 0.9rem; }
+.paso-guia { display: flex; gap: 0.8rem; align-items: flex-start; }
+.paso-numero {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--lavanda-clara), var(--morado));
+  color: var(--sobre-acento);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.paso-texto { min-width: 0; }
+.paso-titulo { margin: 0.2rem 0 0.2rem; font-weight: 700; }
+.paso-texto p, .paso-texto ul { margin: 0.2rem 0; color: var(--texto-suave); font-size: 0.95rem; }
+.paso-texto ul { padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.paso-texto code, .guia-necesitas code {
+  padding: 0.05rem 0.35rem; border-radius: 6px; background: rgb(10 5 25 / 0.35);
+  color: var(--lavanda-clara); overflow-wrap: anywhere; font-size: 0.88rem;
+}
+.guia-necesitas { padding-left: 1.2rem; display: grid; gap: 0.6rem; }
+.guia-necesitas .boton { margin-top: 0.3rem; }

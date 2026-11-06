@@ -1,70 +1,156 @@
 {% extends "base.html" %}
 
-{% block titulo %}Conectar Apple Salud{% endblock %}
+{% block titulo %}Conectar el Apple Watch{% endblock %}
+
+{# Un paso: número grande, una sola cosa que hacer y qué vas a ver #}
+{% macro paso(n, titulo) %}
+  <li class="paso-guia">
+    <span class="paso-numero" aria-hidden="true">{{ n }}</span>
+    <div class="paso-texto">
+      <p class="paso-titulo">{{ titulo }}</p>
+      {{ caller() }}
+    </div>
+  </li>
+{% endmacro %}
 
 {% block contenido %}
-  <p class="volver"><a href="{{ url_for('perfil.inicio') }}#reloj">← Perfil</a></p>
-  <h1>Conectar Apple Salud</h1>
-  <p class="subtitulo">Tu Apple Watch guarda pasos, ejercicio y sueño en la app Salud del iPhone.
-    Con dos automatizaciones de <strong>Atajos</strong>, el iPhone los envía a esta app cada día, sin que hagas nada.</p>
+  <p class="volver"><a href="{{ url_for('cuerpo.conectar') }}">← Conectar</a></p>
+  <h1>Conectar el Apple Watch</h1>
+  <p class="subtitulo">Vamos a hacer que el iPhone envíe tus <strong>pasos</strong> a Niebla Mental cada noche, solo.
+    Se hace una vez y tarda unos 10 minutos. Ve paso a paso: <strong>una cosa en cada paso</strong>.</p>
 
-  <section class="panel guia">
-    <h2 class="titulo-panel">Antes de empezar</h2>
-    <ol>
-      <li>En el <a href="{{ url_for('perfil.inicio') }}#reloj">Perfil</a>, pulsa <strong>🔑 Crear mi clave</strong> y ten a mano la clave y la dirección.</li>
-      <li>⚠️ El iPhone tiene que poder llegar a la app: eso será cuando esté <strong>publicada en internet</strong>.
-        Mientras la app solo esté en tu PC, puedes dejarlo montado y empezará a funcionar en cuanto la publiquemos.</li>
+  <section class="panel guia-aviso">
+    <p>📋 <strong>Antes de nada</strong>, necesitas dos cosas. Cópialas cuando la guía te lo pida:</p>
+    <ol class="guia-necesitas">
+      <li><strong>La dirección de la app</strong>:
+        <code id="guia-url">{{ url_api }}</code>
+        <button class="boton boton-secundario boton-pequeno" type="button" data-copiar="guia-url">📋 Copiar</button></li>
+      <li><strong>Tu clave personal</strong> (empieza por <code>nm_</code>). Se crea en
+        <a href="{{ url_for('cuerpo.conectar') }}">Salud → ⌚ Conectar</a> → «🔑 Crear mi clave».
+        Si ya la creaste y no la guardaste, crea una nueva.</li>
     </ol>
-    <p class="ayuda">Los nombres de los botones pueden variar un poco según la versión de iOS. Si algo no te sale igual, mándame una captura.</p>
   </section>
 
-  <section class="panel guia">
-    <h2 class="titulo-panel">👟 1. Pasos y actividad (cada noche)</h2>
-    <ol>
-      <li>Abre <strong>Atajos</strong> → pestaña <strong>Automatización</strong> → <strong>＋</strong> → <strong>Hora del día</strong>.</li>
-      <li>Elige <strong>22:00</strong>, <strong>Diariamente</strong> y <strong>Ejecutar inmediatamente</strong>. Pulsa <strong>Siguiente</strong> → <strong>Nueva automatización en blanco</strong>.</li>
-      <li>Añade la acción <strong>Buscar muestras de salud</strong>:
-        tipo <strong>Pasos</strong>, filtro <strong>Fecha de inicio · es hoy</strong> y <strong>Agrupar por · Día</strong>.</li>
-      <li>Añade <strong>Obtener detalles de muestras de salud</strong> → <strong>Valor</strong>. (Ese número son tus pasos de hoy.)</li>
-      <li>Repite los dos pasos anteriores con <strong>Energía activa</strong> y con <strong>Tiempo de ejercicio</strong> (si quieres, también <strong>Distancia andando y corriendo</strong>).</li>
-      <li>Añade <strong>Obtener contenido de URL</strong> y pulsa la flecha para ver las opciones:
+  {# ───────────── PARTE 1 ───────────── #}
+  <details class="panel guia-parte" open>
+    <summary class="titulo-panel">Parte 1 · Abrir Atajos y crear la automatización</summary>
+    <ol class="pasos-guia">
+      {% call paso(1, "Busca la app «Atajos» en tu iPhone") %}
+        <p>Es una app de Apple que ya viene instalada. Su icono son <strong>dos cuadrados de colores superpuestos</strong>
+          (azul y rosa). Si no la encuentras: en la pantalla de inicio, <strong>desliza el dedo hacia abajo</strong> en el centro,
+          escribe <strong>Atajos</strong> y tócala. Si no aparece, descárgala gratis en la App Store.</p>
+      {% endcall %}
+      {% call paso(2, "Toca «Automatización», abajo") %}
+        <p>Abajo de la pantalla verás tres pestañas: <em>Atajos · Automatización · Galería</em>. Toca la del medio.</p>
+      {% endcall %}
+      {% call paso(3, "Toca «Nueva automatización»") %}
+        <p>Es un botón grande en el centro. Si ya tienes alguna automatización, es el <strong>＋</strong> de arriba a la derecha.</p>
+      {% endcall %}
+      {% call paso(4, "Toca «Hora del día»") %}
+        <p>Es la primera opción de la lista, con un reloj.</p>
+      {% endcall %}
+      {% call paso(5, "Elige la hora: 22:00") %}
+        <p>Toca la hora que aparece y ponla a las <strong>22:00</strong> (o a la hora en que sueles mirar el móvil antes de dormir:
+          con el móvil bloqueado, Apple no deja leer los datos de salud).</p>
+      {% endcall %}
+      {% call paso(6, "Comprueba que pone «Diariamente»") %}
+        <p>Debajo de la hora tiene que estar marcado <strong>Diariamente</strong>.</p>
+      {% endcall %}
+      {% call paso(7, "Marca «Ejecutar inmediatamente»") %}
+        <p>Más abajo hay dos opciones: <em>Ejecutar tras confirmación</em> y <strong>Ejecutar inmediatamente</strong>. Marca la segunda,
+          así no te preguntará cada noche.</p>
+      {% endcall %}
+      {% call paso(8, "Toca «Siguiente», arriba a la derecha") %}{% endcall %}
+      {% call paso(9, "Toca «Nueva automatización en blanco»") %}
+        <p>Se abre una pantalla casi vacía con un botón <strong>Añadir acción</strong>. Aquí vamos a poner las piezas.</p>
+      {% endcall %}
+    </ol>
+  </details>
+
+  {# ───────────── PARTE 2 ───────────── #}
+  <details class="panel guia-parte">
+    <summary class="titulo-panel">Parte 2 · Leer tus pasos de hoy</summary>
+    <ol class="pasos-guia">
+      {% call paso(10, "Toca «Añadir acción»") %}
+        <p>Se abre un buscador abajo.</p>
+      {% endcall %}
+      {% call paso(11, "Escribe «muestras» y toca «Buscar muestras de salud»") %}
+        <p>Tiene un corazón rojo. Aparece una caja que dice algo como <em>«Buscar todas las muestras de salud de tipo Tipo»</em>.</p>
+      {% endcall %}
+      {% call paso(12, "Toca la palabra azul «Tipo» y elige «Pasos»") %}
+        <p>Usa el buscador de arriba si no lo ves. La primera vez el iPhone te pedirá <strong>permiso para leer Salud</strong>: acéptalo.</p>
+      {% endcall %}
+      {% call paso(13, "Toca «Añadir filtro» y deja «Fecha de inicio · es hoy»") %}
+        <p>Al añadir el filtro suele salir ya <em>Fecha de inicio · está en los últimos 7 días</em>: toca «está en los últimos»
+          y cámbialo a <strong>es hoy</strong>.</p>
+      {% endcall %}
+      {% call paso(14, "Toca «Agrupar por» y elige «Día»") %}
+        <p>Así suma todos tus pasos del día en un solo número.</p>
+      {% endcall %}
+      {% call paso(15, "Toca «Añadir acción» de nuevo y busca «Obtener detalles de muestras de salud»") %}
+        <p>Aparece debajo de la anterior. En la palabra azul elige <strong>Valor</strong>. Ese número son tus pasos de hoy.</p>
+      {% endcall %}
+    </ol>
+  </details>
+
+  {# ───────────── PARTE 3 ───────────── #}
+  <details class="panel guia-parte">
+    <summary class="titulo-panel">Parte 3 · Enviarlos a Niebla Mental</summary>
+    <ol class="pasos-guia">
+      {% call paso(16, "Añadir acción → busca «Obtener contenido de URL»") %}
+        <p>Tiene un icono azul de flecha. Aparece una caja con la palabra <em>URL</em>.</p>
+      {% endcall %}
+      {% call paso(17, "Toca «URL» y pega la dirección de la app") %}
+        <p>La que copiaste arriba (empieza por <code>https://</code> y acaba en <code>/api/salud</code>).</p>
+      {% endcall %}
+      {% call paso(18, "Toca la flechita «›» de la caja para ver más opciones") %}{% endcall %}
+      {% call paso(19, "En «Método», elige «POST»") %}{% endcall %}
+      {% call paso(20, "En «Encabezados», toca «Añadir nuevo encabezado»") %}
+        <p>Aparecen dos huecos: <em>Clave</em> y <em>Texto</em>.</p>
         <ul>
-          <li><strong>URL</strong>: <code>{{ url_api }}</code> (la dirección del Perfil).</li>
-          <li><strong>Método</strong>: POST.</li>
-          <li><strong>Encabezados</strong>: añade <code>Authorization</code> con el valor <code>Bearer TU_CLAVE</code> (la palabra Bearer, un espacio y tu clave).</li>
-          <li><strong>Cuerpo de la solicitud</strong>: JSON, con estos campos de tipo <strong>Número</strong>:
-            <code>pasos</code>, <code>kcal_activas</code>, <code>minutos_activos</code> (y <code>distancia_km</code>),
-            cada uno con su <em>Valor</em> de los pasos anteriores.</li>
+          <li>En <strong>Clave</strong> escribe: <code id="guia-cabecera">Authorization</code>
+            <button class="boton boton-secundario boton-pequeno" type="button" data-copiar="guia-cabecera">📋</button></li>
+          <li>En <strong>Texto</strong> escribe <code>Bearer</code>, <strong>un espacio</strong> y pega tu clave.
+            Queda así: <code>Bearer nm_xxxxxxxx…</code></li>
         </ul>
-      </li>
-      <li>(Opcional) Añade <strong>Mostrar notificación</strong> con el <em>Contenido de la URL</em>: verás «Guardado: 8345 pasos ✓».</li>
-      <li>Pulsa <strong>▶</strong> abajo para probarla.</li>
+      {% endcall %}
+      {% call paso(21, "En «Cuerpo de la solicitud», elige «JSON»") %}{% endcall %}
+      {% call paso(22, "Toca «Añadir nuevo campo» → «Número»") %}
+        <ul>
+          <li>En <strong>Clave</strong> escribe: <code id="guia-pasos">pasos</code>
+            <button class="boton boton-secundario boton-pequeno" type="button" data-copiar="guia-pasos">📋</button></li>
+          <li>En <strong>Número</strong>, toca el hueco y, en la barra que aparece encima del teclado, elige
+            <strong>Detalles de muestras de salud</strong> (la variable azul del paso 15).</li>
+        </ul>
+      {% endcall %}
+      {% call paso(23, "(Opcional) Añadir acción → «Mostrar notificación»") %}
+        <p>En el texto, elige la variable <strong>Contenido de la URL</strong>. Cada noche verás «Guardado: 8345 pasos ✓».</p>
+      {% endcall %}
+      {% call paso(24, "Toca «OK» arriba a la derecha") %}
+        <p>¡Ya está guardada! 🎉</p>
+      {% endcall %}
     </ol>
-  </section>
+  </details>
 
-  <section class="panel guia">
-    <h2 class="titulo-panel">😴 2. Sueño (cada mañana)</h2>
-    <ol>
-      <li>Nueva automatización → <strong>Hora del día</strong> → <strong>11:00</strong>, diariamente, ejecutar inmediatamente.</li>
-      <li><strong>Buscar muestras de salud</strong>: tipo <strong>Análisis del sueño</strong>,
-        filtros <strong>Fecha de inicio · está en las últimas 18 horas</strong> y <strong>Valor · no es · En cama</strong>,
-        ordenar por <strong>Fecha de inicio</strong> (de más antiguo a más nuevo).</li>
-      <li><strong>Obtener elemento de la lista</strong> → <strong>Primer elemento</strong> → <strong>Obtener detalles: Fecha de inicio</strong> → es la hora a la que te dormiste.</li>
-      <li>Otra vez <strong>Obtener elemento de la lista</strong> → <strong>Último elemento</strong> → <strong>Obtener detalles: Fecha de finalización</strong> → la hora a la que te despertaste.</li>
-      <li>A cada una aplícale <strong>Formatear fecha</strong> con el formato <strong>ISO 8601</strong>.</li>
-      <li><strong>Obtener contenido de URL</strong> igual que antes (URL, POST y el encabezado con tu clave), con cuerpo JSON:
-        un campo <code>sueno</code> de tipo <strong>Diccionario</strong> que lleve dentro
-        <code>acostarse</code> y <code>levantarse</code> (tipo Texto, con las fechas formateadas).</li>
+  {# ───────────── PARTE 4 ───────────── #}
+  <details class="panel guia-parte">
+    <summary class="titulo-panel">Parte 4 · Probarla ahora (sin esperar a las 22:00)</summary>
+    <ol class="pasos-guia">
+      {% call paso(25, "En «Automatización», toca la que acabas de crear") %}{% endcall %}
+      {% call paso(26, "Toca el botón ▶ de abajo") %}
+        <p>Si sale la notificación «Guardado…», abre Niebla Mental → <strong>Salud → Actividad</strong>: ahí estarán tus pasos
+          con la etiqueta <em>⌚ del reloj</em>.</p>
+      {% endcall %}
     </ol>
-    <p class="ayuda">Con eso la app calcula cuánto has dormido. Si quieres también las fases (profundo, REM, ligero),
-      se pueden añadir los campos <code>profundo</code>, <code>rem</code> y <code>ligero</code> en minutos: te ayudo a montarlo cuando lo tengas.</p>
-  </section>
+    <p class="ayuda">¿Sale un error o algo no aparece igual? Haz una captura y mándamela: lo miramos juntas.
+      Cuando esto funcione, añadimos el sueño (es parecido).</p>
+  </details>
 
-  <section class="panel guia">
-    <h2 class="titulo-panel">🤖 ¿Y en Android?</h2>
-    <p>La app recibe los mismos datos desde cualquier sitio. En Android, los relojes (Samsung, Xiaomi, Fitbit…) guardan los
-      datos en <strong>Health Connect</strong>; cualquier app de automatización que pueda leerlo y hacer una petición web
-      (como Tasker con un complemento de salud) puede enviarlos igual, con la misma dirección y la misma clave.
-      Y siempre puedes apuntarlos a mano en Salud → Actividad o Sueño.</p>
-  </section>
+  <script>
+    document.querySelectorAll("[data-copiar]").forEach((b) => b.addEventListener("click", async () => {
+      const texto = document.getElementById(b.dataset.copiar).textContent.trim();
+      try { await navigator.clipboard.writeText(texto); b.textContent = "✓ Copiado"; }
+      catch { b.textContent = "Mantén pulsado el texto para copiarlo"; }
+    }));
+  </script>
 {% endblock %}
