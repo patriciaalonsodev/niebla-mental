@@ -17,8 +17,29 @@ def recortar_transparente(imagen):
     return imagen.crop(caja) if caja else imagen
 
 
-def con_fondo(logo, lado, margen=0.12):
-    lienzo = Image.new("RGBA", (lado, lado), FONDO)
+# Degradado del icono (el iPhone no admite iconos transparentes en la pantalla
+# de inicio: si lo es, rellena de negro). Lila muy claro arriba → lavanda abajo.
+DEGRADADO = ((246, 240, 255), (201, 182, 247), (167, 139, 250))
+
+
+def degradado(lado):
+    """Degradado diagonal suave de tres colores."""
+    lienzo = Image.new("RGBA", (lado, lado))
+    pixeles = lienzo.load()
+    a, b, c = DEGRADADO
+    for y in range(lado):
+        for x in range(lado):
+            t = (x + y) / (2 * (lado - 1))
+            if t < 0.5:
+                u, desde, hasta = t * 2, a, b
+            else:
+                u, desde, hasta = (t - 0.5) * 2, b, c
+            pixeles[x, y] = tuple(round(desde[i] + (hasta[i] - desde[i]) * u) for i in range(3)) + (255,)
+    return lienzo
+
+
+def con_fondo(logo, lado, margen=0.05):
+    lienzo = degradado(lado)
     hueco = int(lado * (1 - 2 * margen))
     copia = logo.copy()
     copia.thumbnail((hueco, hueco), Image.Resampling.LANCZOS)
