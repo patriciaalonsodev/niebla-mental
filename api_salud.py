@@ -187,7 +187,10 @@ def recibir():
                               minutos_dormido=minutos, hora_acostarse=acostarse,
                               hora_levantarse=levantarse, **fases)
                 if minutos is not None:
-                    guardado.append(f"sueño {minutos // 60} h {minutos % 60} min")
+                    texto = f"sueño {minutos // 60} h {minutos % 60} min"
+                    if acostarse and levantarse:
+                        texto += f" (de {acostarse:%H:%M} a {levantarse:%H:%M})"
+                    guardado.append(texto)
     except (ValueError, TypeError, AttributeError, IndexError) as error:
         db.session.rollback()
         return {"ok": False, "mensaje": f"Algún dato no se entiende ({error})."}, 400

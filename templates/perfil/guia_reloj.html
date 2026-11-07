@@ -16,7 +16,8 @@
 {% block contenido %}
   <p class="volver"><a href="{{ url_for('cuerpo.conectar') }}">← Conectar</a></p>
   <h1>Conectar el Apple Watch</h1>
-  <p class="subtitulo">Vamos a hacer que el iPhone envíe tus <strong>pasos</strong> a Niebla Mental cada noche, solo.
+  <p class="subtitulo">Vamos a hacer que el iPhone envíe tus <strong>pasos</strong> (cada noche) y tu <strong>sueño</strong>
+    (cada mañana) a Niebla Mental, solo.
     Se hace una vez y tarda unos 15 minutos. Son dos partes: primero un <strong>atajo</strong> (lo que hay que hacer)
     y después una <strong>automatización</strong> (cuándo hacerlo).</p>
 
@@ -129,6 +130,48 @@
       {% endcall %}
       {% call paso(23, "Sal con la flecha ‹") %}
         <p>¡Listo! 🎉 Cada noche tus pasos aparecerán en <strong>Salud → Actividad</strong> con la etiqueta <em>⌚ del reloj</em>.</p>
+      {% endcall %}
+    </ol>
+  </details>
+
+  {# ───────────── PARTE 4: EL SUEÑO ───────────── #}
+  <details class="panel guia-parte">
+    <summary class="titulo-panel">Parte 4 · El sueño (atajo «Sueño Niebla Mental»)</summary>
+    <p class="ayuda">Se hace igual que el de pasos, cambiando las acciones. Crea un atajo nuevo (＋ → «Editar») y llámalo
+      <strong>Sueño Niebla Mental</strong>.</p>
+    <ol class="pasos-guia">
+      {% call paso(1, "«Buscar muestras médicas»") %}
+        <ul>
+          <li><strong>Tipo</strong>: Sueño.</li>
+          <li><strong>Fecha de inicio</strong>: está entre los últimos <strong>1 día</strong>.</li>
+          <li>Añade un filtro: <strong>Valor</strong> · <strong>no es</strong> · <strong>En cama</strong>.</li>
+          <li><strong>Ordenar por</strong>: Fecha de inicio · <strong>Más antiguo primero</strong>.</li>
+        </ul>
+      {% endcall %}
+      {% call paso(2, "«Obtener detalles de muestra médica» → «Fecha de inicio»") %}{% endcall %}
+      {% call paso(3, "«Obtener ítem de la lista» → «Primer ítem» de Fecha de inicio") %}
+        <p>Es la hora a la que te dormiste.</p>
+      {% endcall %}
+      {% call paso(4, "Otra vez «Obtener detalles de muestra médica» → «Fecha de fin»") %}
+        <p>Si sale una variable gris vacía, tócala y elige <strong>Muestras médicas</strong>.</p>
+      {% endcall %}
+      {% call paso(5, "«Obtener ítem de la lista» → «Último ítem» de Fecha de fin") %}
+        <p>Es la hora a la que te despertaste.</p>
+      {% endcall %}
+      {% call paso(6, "«Obtener contenido de URL», igual que en el de pasos") %}
+        <p>Misma dirección, <strong>POST</strong> y la misma cabecera <code>Authorization</code>. En el cuerpo JSON, dos campos
+          de tipo <strong>Texto</strong>:</p>
+        <ul>
+          <li><code>acostarse</code> → «Seleccionar variable» → toca la acción del paso 3.</li>
+          <li><code>levantarse</code> → «Seleccionar variable» → toca la acción del paso 5.</li>
+        </ul>
+      {% endcall %}
+      {% call paso(7, "Pruébalo con ▶") %}
+        <p>Tiene que salir: <em>«Guardado en Niebla Mental: sueño 7 h 30 min ✓»</em>.</p>
+      {% endcall %}
+      {% call paso(8, "Automatización: igual que la Parte 3, pero por la mañana") %}
+        <p>«Momento del día» a las <strong>10:30</strong> (cuando ya estés despierta y con el móvil), cada día,
+          ejecutando <strong>Sueño Niebla Mental</strong>. Lo verás en <strong>Salud → Sueño</strong>.</p>
       {% endcall %}
     </ol>
   </details>
