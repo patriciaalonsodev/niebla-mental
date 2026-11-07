@@ -228,7 +228,7 @@ def test_sueno_ignora_el_dormido_generico_si_hay_fases(cliente_con_sesion):
     respuesta = _enviar(cliente_con_sesion, clave, {
         "acostarse": "7 nov 2026, 2:27\n7 nov 2026, 2:30\n7 nov 2026, 4:00\n7 nov 2026, 4:10\n7 nov 2026, 6:00",
         "levantarse": "7 nov 2026, 9:58\n7 nov 2026, 4:00\n7 nov 2026, 4:10\n7 nov 2026, 6:00\n7 nov 2026, 9:12",
-        "fases": "Dormido\nPrincipal\nDespierto\nProfundo\nREM",
+        "fases": "Dormido\nBásico\nDespierto\nProfundo\nSueño REM",
     })
     # 90 + 110 + 192 = 392 min (6 h 32), sin los 10 min despierta
     assert "sueño 6 h 32 min (de 02:30 a 09:12)" in respuesta.get_json()["mensaje"]

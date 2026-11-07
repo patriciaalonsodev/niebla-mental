@@ -119,10 +119,13 @@ def _lineas(valor):
 _FASES = {   # cómo llama Salud a cada fase (español e inglés) → nuestra fase
     "profundo": "profundo", "deep": "profundo",
     "rem": "rem",
-    "principal": "ligero", "núcleo": "ligero", "nucleo": "ligero", "ligero": "ligero", "core": "ligero",
+    "principal": "ligero", "básico": "ligero", "basico": "ligero", "esencial": "ligero", "núcleo": "ligero", "nucleo": "ligero", "ligero": "ligero", "core": "ligero",
     "despierto": "despierto", "awake": "despierto",
     "en cama": "cama", "in bed": "cama", "inbed": "cama",
 }
+
+
+_GENERICO = ("dormido", "asleep", "sin especificar", "unspecified")
 
 
 def _fase(texto):
@@ -130,7 +133,9 @@ def _fase(texto):
     for nombre, fase in _FASES.items():
         if nombre in texto:
             return fase
-    return "dormido"          # «Dormido» sin fase (iPhone u otras apps)
+    if not texto or any(g in texto for g in _GENERICO):
+        return "dormido"      # «Dormido» sin fase (iPhone u otras apps)
+    return "ligero"           # otro nombre de fase («Básico», «Esencial»…): es sueño ligero
 
 
 def _tramos_de_sueno(inicios, finales, zona, valores=None):
