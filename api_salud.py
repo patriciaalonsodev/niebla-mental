@@ -14,7 +14,7 @@
 import hashlib
 import re
 import secrets
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from flask import Blueprint, current_app, request
@@ -120,7 +120,7 @@ _FASES = {   # cómo llama Salud a cada fase (español e inglés) → nuestra fa
     "profundo": "profundo", "deep": "profundo",
     "rem": "rem",
     "principal": "ligero", "básico": "ligero", "basico": "ligero", "esencial": "ligero", "núcleo": "ligero", "nucleo": "ligero", "ligero": "ligero", "core": "ligero",
-    "despierto": "despierto", "awake": "despierto",
+    "despierto": "despierto", "vigilia": "despierto", "awake": "despierto",
     "en cama": "cama", "in bed": "cama", "inbed": "cama",
 }
 
@@ -138,13 +138,40 @@ def _fase(texto):
     return "ligero"           # otro nombre de fase («Básico», «Esencial»…): es sueño ligero
 
 
+_MESES = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6, "jul": 7, "ago": 8,
+          "sep": 9, "oct": 10, "nov": 11, "dic": 12, "jan": 1, "apr": 4, "aug": 8, "dec": 12}
+_FECHA_TEXTO = re.compile(r"(\d{1,2})\s*(?:de\s+)?([a-záéíóú]{3})[a-záéíóú.]*\s*(?:de\s+)?(\d{4})", re.IGNORECASE)
+_FECHA_NUMEROS = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{2,4})")
+
+
+def _momento(texto, zona):
+    """Fecha y hora de una muestra («6 nov 2026, 3:57», «6/11/26 3:57» o ISO).
+    Devuelve datetime sin zona (hora local) o None si no trae fecha."""
+    texto = str(texto).strip()
+    if re.match(r"^\d{4}-\d{2}-\d{2}", texto):
+        momento = datetime.fromisoformat(texto.replace("Z", "+00:00"))
+        if momento.tzinfo is not None:
+            momento = momento.astimezone(zona).replace(tzinfo=None)
+        return momento.replace(second=0, microsecond=0)
+    dia = None
+    if (m := _FECHA_TEXTO.search(texto)) and m.group(2).lower()[:3] in _MESES:
+        dia = date(int(m.group(3)), _MESES[m.group(2).lower()[:3]], int(m.group(1)))
+    elif m := _FECHA_NUMEROS.search(texto):
+        anio = int(m.group(3))
+        dia = date(anio + 2000 if anio < 100 else anio, int(m.group(2)), int(m.group(1)))
+    if dia is None:
+        return None
+    return datetime.combine(dia, _hora(texto, zona))
+
+
 def _tramos_de_sueno(inicios, finales, zona, valores=None):
-    """Con todos los tramos de la noche (inicio y fin de cada muestra)
-    calcula el tiempo dormido como Salud: suma los tramos sin contar dos
-    veces los que se pisan (reloj + iPhone). Si llegan las fases (Valor)
-    y hay fases del reloj, se ignoran los «Dormido» genéricos, los ratos
-    despierto y «En cama», igual que hace Salud. Las horas desde las 15:00
-    se cuentan como del día anterior.
+    """Con todas las muestras de sueño (inicio, fin y fase de cada una)
+    calcula la última noche como Salud:
+    - si Atajos trae también la noche anterior, se queda con la última
+      (las noches se separan por un hueco de más de 4 horas);
+    - si hay fases del reloj, ignora los «Dormido» genéricos del iPhone,
+      «En cama» y los ratos despierta (Vigilia);
+    - suma los tramos sin contar dos veces los que se pisan.
     Devuelve (acostarse, levantarse, minutos, fases) o None si no hay tramos."""
     inicios, finales = _lineas(inicios), _lineas(finales)
     if len(inicios) < 2 or len(inicios) != len(finales):
@@ -152,27 +179,43 @@ def _tramos_de_sueno(inicios, finales, zona, valores=None):
     valores = _lineas(valores)
     fases_muestra = [_fase(v) for v in valores] if len(valores) == len(inicios) else ["dormido"] * len(inicios)
 
-    def minuto(hora):
-        m = hora.hour * 60 + hora.minute
-        return m - 1440 if hora.hour >= 15 else m
+    momentos = [(_momento(a, zona), _momento(b, zona)) for a, b in zip(inicios, finales)]
+    if all(a and b for a, b in momentos):
+        todos = [(a, b if b >= a else b + timedelta(days=1), f) for (a, b), f in zip(momentos, fases_muestra)]
+    else:
+        # Sin fecha: solo la hora (las de desde las 15:00, del día anterior)
+        base = datetime(2000, 1, 2)
 
-    todos = []
-    for ini, fin, fase in zip(inicios, finales, fases_muestra):
-        a, b = minuto(_hora(ini, zona)), minuto(_hora(fin, zona))
-        if b < a:
-            b += 1440
-        todos.append((a, b, fase))
+        def cuando(hora):
+            m = base + timedelta(hours=hora.hour, minutes=hora.minute)
+            return m - timedelta(days=1) if hora.hour >= 15 else m
+
+        todos = []
+        for ini, fin, fase in zip(inicios, finales, fases_muestra):
+            a, b = cuando(_hora(ini, zona)), cuando(_hora(fin, zona))
+            todos.append((a, b if b >= a else b + timedelta(days=1), fase))
+
+    # Quedarse con la última noche
+    todos.sort(key=lambda t: t[0])
+    noche, fin_noche = [], None
+    for t in todos:
+        if fin_noche is not None and t[0] - fin_noche > timedelta(hours=4):
+            noche, fin_noche = [], None
+        noche.append(t)
+        fin_noche = t[1] if fin_noche is None else max(fin_noche, t[1])
+    todos = noche
 
     hay_fases = any(f in ("profundo", "rem", "ligero") for *_, f in todos)
     validas = ("profundo", "rem", "ligero") if hay_fases else ("dormido",)
-    elegidos = [t for t in todos if t[2] in validas] or todos
+    elegidos = [t for t in todos if t[2] in validas] or [t for t in todos if t[2] not in ("cama", "despierto")] or todos
     fases = {}
-    for a, b, f in todos:
-        if f in ("profundo", "rem", "ligero", "despierto") and hay_fases:
-            fases[f"minutos_{f}"] = fases.get(f"minutos_{f}", 0) + (b - a)
-    tramos = sorted((a, b) for a, b, _ in elegidos)
+    if hay_fases:
+        for a, b, f in todos:
+            if f in ("profundo", "rem", "ligero", "despierto"):
+                fases[f"minutos_{f}"] = fases.get(f"minutos_{f}", 0) + int((b - a).total_seconds() // 60)
 
-    total, actual = 0, list(tramos[0])
+    tramos = sorted((a, b) for a, b, _ in elegidos)
+    total, actual = timedelta(0), list(tramos[0])
     for a, b in tramos[1:]:
         if a <= actual[1]:
             actual[1] = max(actual[1], b)
@@ -180,12 +223,10 @@ def _tramos_de_sueno(inicios, finales, zona, valores=None):
             total += actual[1] - actual[0]
             actual = [a, b]
     total += actual[1] - actual[0]
-
-    def a_hora(m):
-        m %= 1440
-        return time(m // 60, m % 60)
-
-    return a_hora(tramos[0][0]), a_hora(max(b for _, b in tramos)), min(total, 1440), fases
+    minutos = min(int(total.total_seconds() // 60), 1440)
+    acostarse = tramos[0][0].time().replace(second=0)
+    levantarse = max(b for _, b in tramos).time().replace(second=0)
+    return acostarse, levantarse, minutos, fases
 
 
 def _fecha(valor, hoy):

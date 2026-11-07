@@ -234,3 +234,17 @@ def test_sueno_ignora_el_dormido_generico_si_hay_fases(cliente_con_sesion):
     assert "sueño 6 h 32 min (de 02:30 a 09:12)" in respuesta.get_json()["mensaje"]
     noche = RegistroSueno.query.one()
     assert (noche.minutos_ligero, noche.minutos_profundo, noche.minutos_rem, noche.minutos_despierto) == (90, 110, 192, 10)
+
+
+def test_sueno_solo_la_ultima_noche_y_sin_vigilia(cliente_con_sesion):
+    # Atajos trae también la noche anterior; el rato despierta se llama «Vigilia»
+    clave = _crear_clave(cliente_con_sesion)
+    respuesta = _enviar(cliente_con_sesion, clave, {
+        "acostarse": "6 nov 2026, 3:57\n6 nov 2026, 4:13\n7 nov 2026, 2:27\n7 nov 2026, 3:00\n7 nov 2026, 3:10\n7 nov 2026, 2:20",
+        "levantarse": "6 nov 2026, 4:13\n6 nov 2026, 9:58\n7 nov 2026, 3:00\n7 nov 2026, 3:10\n7 nov 2026, 9:13\n7 nov 2026, 9:40",
+        "fases": "Esencial\nREM\nProfundo\nVigilia\nEsencial\nDormido",
+    })
+    # 2:27-3:00 (33) + 3:10-9:13 (363) = 396 min = 6 h 36, sin la noche del 6
+    assert "sueño 6 h 36 min (de 02:27 a 09:13)" in respuesta.get_json()["mensaje"]
+    noche = RegistroSueno.query.one()
+    assert (noche.minutos_profundo, noche.minutos_ligero, noche.minutos_despierto) == (33, 363, 10)
