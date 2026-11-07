@@ -108,6 +108,52 @@ def _hora(valor, zona):
     return time(horas, minutos)
 
 
+def _lineas(valor):
+    """Una lista de Atajos llega como texto con un elemento por línea
+    (o como lista JSON)."""
+    if isinstance(valor, list):
+        return [str(v).strip() for v in valor if str(v).strip()]
+    return [linea.strip() for linea in str(valor or "").splitlines() if linea.strip()]
+
+
+def _tramos_de_sueno(inicios, finales, zona):
+    """Con todos los tramos de la noche (inicio y fin de cada muestra)
+    calcula el tiempo dormido como Salud: suma los tramos sin contar dos
+    veces los que se pisan (reloj + iPhone). Las horas de la tarde/noche
+    (desde las 15:00) se cuentan como del día anterior.
+    Devuelve (acostarse, levantarse, minutos) o None si no hay tramos."""
+    inicios, finales = _lineas(inicios), _lineas(finales)
+    if len(inicios) < 2 or len(inicios) != len(finales):
+        return None
+
+    def minuto(hora):
+        m = hora.hour * 60 + hora.minute
+        return m - 1440 if hora.hour >= 15 else m
+
+    tramos = []
+    for ini, fin in zip(inicios, finales):
+        a, b = minuto(_hora(ini, zona)), minuto(_hora(fin, zona))
+        if b < a:
+            b += 1440
+        tramos.append((a, b))
+    tramos.sort()
+
+    total, actual = 0, list(tramos[0])
+    for a, b in tramos[1:]:
+        if a <= actual[1]:
+            actual[1] = max(actual[1], b)
+        else:
+            total += actual[1] - actual[0]
+            actual = [a, b]
+    total += actual[1] - actual[0]
+
+    def a_hora(m):
+        m %= 1440
+        return time(m // 60, m % 60)
+
+    return a_hora(tramos[0][0]), a_hora(max(b for _, b in tramos)), min(total, 1440)
+
+
 def _fecha(valor, hoy):
     if not valor:
         return hoy
@@ -174,8 +220,14 @@ def recibir():
             sueno = {"acostarse": datos.get("acostarse"), "levantarse": datos.get("levantarse"),
                      "horas": datos.get("horas_sueno"), "fecha": datos.get("fecha_sueno")}
         if isinstance(sueno, dict):
-            acostarse, levantarse = _hora(sueno.get("acostarse"), zona), _hora(sueno.get("levantarse"), zona)
             minutos = _numero(sueno.get("minutos"), entero=True, maximo=1440)
+            tramos = _tramos_de_sueno(sueno.get("acostarse"), sueno.get("levantarse"), zona)
+            if tramos:
+                acostarse, levantarse, dormido = tramos
+                if minutos is None:
+                    minutos = dormido
+            else:
+                acostarse, levantarse = _hora(sueno.get("acostarse"), zona), _hora(sueno.get("levantarse"), zona)
             if minutos is None and sueno.get("horas") not in (None, ""):
                 minutos = round(_numero(sueno.get("horas"), maximo=24) * 60)
             if minutos is None and acostarse and levantarse:

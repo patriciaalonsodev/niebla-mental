@@ -206,3 +206,17 @@ def test_sueno_con_fechas_como_las_escribe_atajos(cliente_con_sesion):
     noche = RegistroSueno.query.one()
     assert (noche.hora_acostarse, noche.hora_levantarse, noche.minutos_dormido) == (time(23, 52), time(7, 31), 459)
     assert _enviar(cliente_con_sesion, clave, {"acostarse": "ayer por la noche"}).status_code == 400
+
+
+def test_sueno_con_todos_los_tramos_de_la_noche(cliente_con_sesion):
+    # Atajos manda las listas enteras (una fecha por línea), desordenadas y
+    # con un tramo del iPhone que se pisa con el del reloj
+    clave = _crear_clave(cliente_con_sesion)
+    respuesta = _enviar(cliente_con_sesion, clave, {
+        "acostarse": "7 nov 2026, 3:57\n6 nov 2026, 23:50\n7 nov 2026, 2:25\n7 nov 2026, 2:40",
+        "levantarse": "7 nov 2026, 9:12\n7 nov 2026, 0:30\n7 nov 2026, 3:30\n7 nov 2026, 3:00",
+    })
+    # 23:50-0:30 (40) + 2:25-3:30 (65) + 3:57-9:12 (315) = 420 min
+    assert "sueño 7 h 0 min (de 23:50 a 09:12)" in respuesta.get_json()["mensaje"]
+    noche = RegistroSueno.query.one()
+    assert (noche.hora_acostarse, noche.hora_levantarse, noche.minutos_dormido) == (time(23, 50), time(9, 12), 420)
