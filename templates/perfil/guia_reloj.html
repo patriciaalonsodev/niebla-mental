@@ -145,27 +145,32 @@
           <li><strong>Tipo</strong>: Sueño.</li>
           <li><strong>Fecha de inicio</strong>: está entre los últimos <strong>1 día</strong>.</li>
           <li>Filtro: <strong>Valor</strong> · <strong>no es</strong> · <strong>En cama</strong>.</li>
-          <li>Otro filtro: <strong>Valor</strong> · <strong>no es</strong> · <strong>Despierto</strong>.</li>
-          <li>Que <strong>no</strong> esté activado «Limitar».</li>
+          <li><strong>Límite</strong>: desactivado (gris). Sin filtro de «Origen».</li>
         </ul>
+        <p>No importa si coge también la noche anterior: la app se queda solo con la última.</p>
       {% endcall %}
       {% call paso(2, "«Obtener detalles de muestra médica» → «Fecha de inicio»") %}{% endcall %}
       {% call paso(3, "Otra vez «Obtener detalles de muestra médica» → «Fecha de fin»") %}
         <p>Si sale una variable gris vacía, tócala y elige <strong>Muestras médicas</strong>.</p>
       {% endcall %}
-      {% call paso(4, "«Obtener contenido de URL», igual que en el de pasos") %}
-        <p>Misma dirección, <strong>POST</strong> y la misma cabecera <code>Authorization</code>. En el cuerpo JSON, dos campos
-          de tipo <strong>Texto</strong>:</p>
-        <ul>
-          <li><code>acostarse</code> → «Seleccionar variable» → toca la acción del paso 2 (<strong>Fecha de inicio</strong>).</li>
-          <li><code>levantarse</code> → «Seleccionar variable» → toca la acción del paso 3 (<strong>Fecha de fin</strong>).</li>
-        </ul>
-        <p>Se mandan todos los trozos de la noche y la app los suma igual que Salud.</p>
+      {% call paso(4, "Otra vez «Obtener detalles de muestra médica» → «Valor»") %}
+        <p>Son las fases (Esencial, Profundo, REM, Vigilia…).</p>
       {% endcall %}
-      {% call paso(5, "Pruébalo con ▶") %}
+      {% call paso(5, "«Obtener contenido de URL», igual que en el de pasos") %}
+        <p>Misma dirección, <strong>POST</strong> y la misma cabecera <code>Authorization</code>. En el cuerpo JSON, tres campos
+          de tipo <strong>Texto</strong> («Seleccionar variable» → toca la acción):</p>
+        <ul>
+          <li><code>acostarse</code> → la acción del paso 2 (<strong>Fecha de inicio</strong>).</li>
+          <li><code>levantarse</code> → la del paso 3 (<strong>Fecha de fin</strong>).</li>
+          <li><code>fases</code> → la del paso 4 (<strong>Valor</strong>).</li>
+        </ul>
+        <p>La app suma los trozos de la noche igual que Salud (sin los ratos despierta).</p>
+      {% endcall %}
+
+      {% call paso(6, "Pruébalo con ▶") %}
         <p>Tiene que salir: <em>«Guardado en Niebla Mental: sueño 7 h 30 min ✓»</em>.</p>
       {% endcall %}
-      {% call paso(6, "Automatización: igual que la Parte 3, pero por la mañana") %}
+      {% call paso(7, "Automatización: igual que la Parte 3, pero por la mañana") %}
         <p>«Momento del día» a las <strong>10:30</strong> (cuando ya estés despierta y con el móvil), cada día,
           ejecutando <strong>Sueño Niebla Mental</strong>. Lo verás en <strong>Salud → Sueño</strong>.</p>
       {% endcall %}
