@@ -52,6 +52,10 @@ ICONOS = {
     "agenda": "agenda", "compra": "compra", "diario": "diario", "notas": "notas",
     "nutricon": "nutricion", "nutricion": "nutricion", "perfil": "perfil",
     "salud": "salud", "tareas": "tareas", "inicio": "inicio",
+    # Pestañas de Salud y de Nutrición
+    "sintomas": "sintomas", "medicacion": "medicacion", "actividad": "actividad",
+    "sueno": "sueno", "conectar": "conectar",
+    "hoy": "hoy", "plan": "plan", "alimentos": "alimentos", "peso": "peso", "recetas": "recetas",
 }
 LADO_ICONO = 144          # se ven a 48–72 px: así quedan nítidos en pantallas retina
 

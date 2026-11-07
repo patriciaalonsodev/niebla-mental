@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_campos.html" import campo %}
-{% from "nutricion/_macros.html" import pestanas %}
+{% from "nutricion/_macros.html" import pestanas with context %}
 
 {% macro opciones(field) %}
   <fieldset class="campo selector-cucharas selector-tipo">

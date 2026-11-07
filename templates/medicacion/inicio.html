@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "salud/_pestanas.html" import pestanas %}
+{% from "salud/_pestanas.html" import pestanas with context %}
 {% from "medicacion/_macros.html" import fila_programada, formulario_medicamento, nombre_med %}
 
 {% block titulo %}Medicación{% endblock %}

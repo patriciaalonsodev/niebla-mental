@@ -11,7 +11,10 @@
        ] %}
       <a class="pestana{% if activa == clave %} pestana-activa{% endif %}" href="{{ url_for(endpoint) }}"
          {% if activa == clave %}aria-current="page"{% endif %}>
-        <span aria-hidden="true">{{ icono }}</span><span class="pestana-texto">{{ texto }}</span>
+        {% set imagen = icono_url(clave) %}
+        {% if imagen %}<img class="pestana-imagen" src="{{ imagen }}" alt="" width="30" height="30">
+        {% else %}<span aria-hidden="true">{{ icono }}</span>{% endif %}
+        <span class="pestana-texto">{{ texto }}</span>
       </a>
     {% endfor %}
   </nav>

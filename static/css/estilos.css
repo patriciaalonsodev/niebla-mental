@@ -1852,3 +1852,5 @@ a.boton-redondo { text-decoration: none; }
 }
 .guia-necesitas { padding-left: 1.2rem; display: grid; gap: 0.6rem; }
 .guia-necesitas .boton { margin-top: 0.3rem; }
+.pestana-imagen { width: 30px; height: 30px; object-fit: contain; }
+.pestana:not(.pestana-activa) .pestana-imagen { opacity: 0.85; }

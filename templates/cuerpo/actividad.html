@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_campos.html" import campo %}
-{% from "salud/_pestanas.html" import pestanas %}
+{% from "salud/_pestanas.html" import pestanas with context %}
 {% from "cuerpo/_macros.html" import barras, aviso_reloj %}
 
 {% block titulo %}Actividad{% endblock %}
