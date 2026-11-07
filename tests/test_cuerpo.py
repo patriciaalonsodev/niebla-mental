@@ -195,3 +195,14 @@ def test_conectar_en_salud(cliente_con_sesion):
     texto = cliente_con_sesion.post("/perfil/reloj/clave", data={"volver": "salud"}).get_data(as_text=True)
     assert 'id="clave"' in texto and "¿Con qué funciona?" in texto
     assert "Conecta tu reloj o tus apps" not in cliente_con_sesion.get("/salud/actividad").get_data(as_text=True)
+
+
+def test_sueno_con_fechas_como_las_escribe_atajos(cliente_con_sesion):
+    clave = _crear_clave(cliente_con_sesion)
+    respuesta = _enviar(cliente_con_sesion, clave, {
+        "acostarse": "6 nov 2026, 23:52", "levantarse": "7 nov 2026, 7:31",    # sin «diccionario»
+    })
+    assert respuesta.status_code == 200 and "sueño 7 h 39 min" in respuesta.get_json()["mensaje"]
+    noche = RegistroSueno.query.one()
+    assert (noche.hora_acostarse, noche.hora_levantarse, noche.minutos_dormido) == (time(23, 52), time(7, 31), 459)
+    assert _enviar(cliente_con_sesion, clave, {"acostarse": "ayer por la noche"}).status_code == 400

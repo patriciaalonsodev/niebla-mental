@@ -80,18 +80,32 @@ def _numero(valor, entero=False, maximo=None):
     return round(numero) if entero else round(numero, 2)
 
 
+# La hora dentro de un texto tal como lo escribe Atajos según el idioma:
+# «7 nov 2026, 0:32», «7/11/26 23:40», «11:05 p. m.»…
+_HORA_EN_TEXTO = re.compile(r"(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap])?\.?\s*m?\.?", re.IGNORECASE)
+
+
 def _hora(valor, zona):
-    """«23:40», «23:40:12» o una fecha y hora ISO → time en la zona del usuario."""
+    """«23:40», una fecha y hora ISO o una fecha escrita por Atajos → time
+    en la zona del usuario."""
     if not valor:
         return None
     texto = str(valor).strip()
-    if "T" in texto or "-" in texto[:10]:
+    if re.match(r"^\d{4}-\d{2}-\d{2}", texto):
         momento = datetime.fromisoformat(texto.replace("Z", "+00:00"))
         if momento.tzinfo is not None:
             momento = momento.astimezone(zona)
         return momento.time().replace(second=0, microsecond=0)
-    partes = texto.split(":")
-    return time(int(partes[0]), int(partes[1]))
+    encontrada = _HORA_EN_TEXTO.findall(texto)
+    if not encontrada:
+        raise ValueError(f"no encuentro la hora en «{texto[:40]}»")
+    horas, minutos, ampm = encontrada[-1]
+    horas, minutos = int(horas), int(minutos)
+    if ampm.lower() == "p" and horas < 12:
+        horas += 12
+    elif ampm.lower() == "a" and horas == 12:
+        horas = 0
+    return time(horas, minutos)
 
 
 def _fecha(valor, hoy):
@@ -155,6 +169,10 @@ def recibir():
             guardado.append(f"{ejercicio.get('tipo') or 'ejercicio'} {minutos} min")
 
         sueno = datos.get("sueno")
+        # También vale sin «diccionario»: acostarse / levantarse sueltos
+        if not isinstance(sueno, dict) and any(datos.get(k) for k in ("acostarse", "levantarse", "horas_sueno")):
+            sueno = {"acostarse": datos.get("acostarse"), "levantarse": datos.get("levantarse"),
+                     "horas": datos.get("horas_sueno"), "fecha": datos.get("fecha_sueno")}
         if isinstance(sueno, dict):
             acostarse, levantarse = _hora(sueno.get("acostarse"), zona), _hora(sueno.get("levantarse"), zona)
             minutos = _numero(sueno.get("minutos"), entero=True, maximo=1440)
