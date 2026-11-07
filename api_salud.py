@@ -281,6 +281,13 @@ def recibir():
                     texto = f"sueño {minutos // 60} h {minutos % 60} min"
                     if acostarse and levantarse:
                         texto += f" (de {acostarse:%H:%M} a {levantarse:%H:%M})"
+                    if datos.get("diagnostico") or request.args.get("diagnostico"):
+                        from collections import Counter
+                        valores = Counter(_lineas(sueno.get("fases")))
+                        texto += (f" [inicios {len(_lineas(sueno.get('acostarse')))}, finales {len(_lineas(sueno.get('levantarse')))},"
+                                  f" fases {sum(valores.values())}: "
+                                  + ", ".join(f"{v[:25]}×{n}" for v, n in valores.most_common(8))
+                                  + f" | primeras: {' / '.join(_lineas(sueno.get('acostarse'))[:2])[:80]}]")
                     guardado.append(texto)
     except (ValueError, TypeError, AttributeError, IndexError) as error:
         db.session.rollback()
