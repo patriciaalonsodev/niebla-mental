@@ -115,6 +115,7 @@ class FormularioTarea(FlaskForm):
         validators=[DataRequired("Escribe la tarea."), Length(max=200)],
     )
     fecha = DateField("¿Para cuándo?", validators=[Optional()])
+    hora = TimeField("¿A qué hora?", validators=[Optional()])
     coste_energia = RadioField(
         "¿Cuántas cucharas te costará?",
         choices=OPCIONES_CUCHARAS,

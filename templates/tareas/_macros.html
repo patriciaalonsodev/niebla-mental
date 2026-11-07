@@ -28,7 +28,10 @@
   <form method="post" action="{{ accion }}" novalidate class="formulario">
     {{ form.hidden_tag() }}
     {{ campo(form.titulo, autocomplete="off") }}
-    {{ campo(form.fecha) }}
+    <div class="campos-fila campos-fila-2">
+      {{ campo(form.fecha) }}
+      {{ campo(form.hora) }}
+    </div>
     {{ selector_cucharas(form.coste_energia) }}
     <details class="mas-opciones" {% if form.notas.data %}open{% endif %}>
       <summary>Añadir notas</summary>

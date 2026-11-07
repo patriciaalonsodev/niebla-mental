@@ -154,16 +154,13 @@ def _url_logo(app):
 # Qué icono de la barra de navegación se ilumina en cada parte de la app
 SECCION_DE = {
     "eventos": "agenda", "google": "agenda",
-    "captura": "apuntar",
+    "tareas": "tareas", "notas": "notas", "compra": "compra", "diario": "diario", "nutricion": "nutricion",
     "salud": "salud", "medicacion": "salud", "cuerpo": "salud",
     "perfil": "perfil", "auth": "perfil",
 }
 
 # Secciones a las que se llega desde el inicio: llevan «← Inicio» arriba
-LISTADOS_CON_VOLVER = {
-    "tareas.listado", "notas.listado", "compra.listado", "diario.listado", "captura.bandeja",
-    "nutricion.inicio",
-}
+LISTADOS_CON_VOLVER = {"captura.bandeja"}   # el resto ya está en la barra de abajo
 
 # Secciones de la app. Las que tienen "endpoint" ya funcionan;
 # el resto aparecen como "Próximamente".
@@ -182,17 +179,37 @@ def _registrar_rutas_basicas(app):
     @app.get("/")
     @login_required
     def inicio():
+        from datetime import time
         from captura import apuntes_pendientes
-        from eventos import proximos_para_inicio
+        from eventos import _eventos_entre
         from formularios import FormularioApunte
-        from medicacion import pendientes_ahora
+        from medicacion import plan_de_hoy
+        from models import RegistroActividad, RegistroSueno, Tarea
+
+        hoy = current_user.hoy()
+        tareas = db.session.scalars(db.select(Tarea).where(
+            Tarea.usuario_id == current_user.id, Tarea.completada.is_(False), Tarea.fecha <= hoy)).all()
+        tareas.sort(key=lambda t: (t.fecha == hoy, t.hora is None, t.hora or time.max))   # atrasadas primero
+        hechas_hoy = db.session.scalar(db.select(db.func.count(Tarea.id)).where(
+            Tarea.usuario_id == current_user.id, Tarea.completada.is_(True), Tarea.fecha == hoy))
+        programadas, _ = plan_de_hoy()
+        sueno = db.session.scalar(db.select(RegistroSueno).filter_by(usuario_id=current_user.id, fecha=hoy))
+        actividad = db.session.scalar(db.select(RegistroActividad).filter_by(usuario_id=current_user.id, fecha=hoy))
+        pasos = actividad.pasos if actividad and actividad.pasos is not None else None
+        objetivo = current_user.objetivo_pasos or 6000
         return render_template(
             "inicio.html",
-            secciones=SECCIONES,
+            hoy=hoy,
+            tareas=tareas,
+            hechas_hoy=hechas_hoy,
+            eventos=_eventos_entre(hoy, hoy),
+            tomas=programadas,
+            sueno=sueno,
+            pasos=pasos,
+            objetivo_pasos=objetivo,
+            por_ciento_pasos=min(100, round((pasos or 0) * 100 / objetivo)),
             form_apunte=FormularioApunte(),
             num_apuntes=len(apuntes_pendientes()),
-            tomas_pendientes=pendientes_ahora(),
-            proximos=proximos_para_inicio(),
         )
 
     @app.after_request

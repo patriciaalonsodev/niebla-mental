@@ -251,6 +251,7 @@ class Tarea(MarcasTiempo, db.Model):
     titulo = db.Column(db.String(200), nullable=False)
     notas = db.Column(db.Text)
     fecha = db.Column(db.Date, index=True)          # día previsto (opcional)
+    hora = db.Column(db.Time)                       # hora (opcional)
     coste_energia = db.Column(db.SmallInteger)      # 1–5, para las cucharas
     completada = db.Column(db.Boolean, nullable=False, default=False)
     completada_en = db.Column(db.DateTime(timezone=True))

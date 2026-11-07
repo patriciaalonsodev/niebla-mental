@@ -1,70 +1,101 @@
 {% extends "base.html" %}
+{% from "medicacion/_macros.html" import fila_programada %}
+{% from "eventos/_macros.html" import fila_evento %}
+
+{# Cabecera de cada bloque: tu icono, el título y un enlace a la sección #}
+{% macro cabecera(icono_nombre, emoji, titulo, enlace, texto_enlace="Ver todo") %}
+  <div class="hoy-cabecera">
+    <h2 class="titulo-con-mini">{{ icono(icono_nombre, emoji, 32) }} {{ titulo }}</h2>
+    <a class="hoy-enlace" href="{{ enlace }}">{{ texto_enlace }} ›</a>
+  </div>
+{% endmacro %}
 
 {% block contenido %}
-  <h1>Hola, {{ current_user.nombre }} 💜</h1>
-  <p class="subtitulo">Todo lo que no quieres olvidar, en un solo sitio.</p>
+  <h1 class="hoy-saludo">Hola, {{ current_user.nombre }} 💜</h1>
+  <p class="subtitulo">{{ hoy|fecha_larga|capitalize }}</p>
 
-  {% if tomas_pendientes %}
-    {% from "medicacion/_macros.html" import fila_programada %}
-    <section class="aviso-tomas" aria-labelledby="titulo-tomas">
-      <h2 id="titulo-tomas" class="titulo-panel">⏰ Te toca la medicación</h2>
-      <ul class="lista-tareas">
-        {% for p in tomas_pendientes %}{{ fila_programada(p, volver=url_for('inicio')) }}{% endfor %}
+  {# ── Tareas de hoy ── #}
+  <section class="panel hoy-bloque" aria-label="Tareas de hoy">
+    {{ cabecera("tareas", "✅", "Tareas de hoy", url_for('tareas.formulario_nueva'), "＋ Nueva") }}
+    {% if tareas %}
+      <ul class="compra-filas lista-unica">
+        {% for tarea in tareas %}
+          <li class="compra-fila tarea-fila">
+            <form method="post" action="{{ url_for('tareas.completar', tarea_id=tarea.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="volver" value="{{ url_for('inicio') }}">
+              <button class="compra-check" type="submit" aria-label="Marcar como hecha: {{ tarea.titulo }}"><span aria-hidden="true"></span></button>
+            </form>
+            <a class="compra-nombre tarea-enlace" href="{{ url_for('tareas.editar', tarea_id=tarea.id) }}">{{ tarea.titulo }}</a>
+            {% if tarea.fecha < hoy %}
+              <span class="tarea-cuando tarea-atrasada">{{ tarea.fecha|fecha_corta }} ⚠️</span>
+            {% elif tarea.hora %}
+              <span class="tarea-cuando tarea-hoy">{{ tarea.hora.strftime('%H:%M') }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
       </ul>
-    </section>
-  {% endif %}
-
-  {# Captura rápida: se guarda en la bandeja y se ordena después #}
-  {% from "captura/_macros.html" import formulario_apunte %}
-  <section class="panel captura" aria-labelledby="titulo-captura">
-    <h2 id="titulo-captura" class="titulo-panel">＋ Apuntar algo</h2>
-    {{ formulario_apunte(form_apunte, volver=url_for('inicio')) }}
-    {% if num_apuntes %}
-      <p class="captura-pendientes">
-        <a href="{{ url_for('captura.bandeja') }}">📥 Tienes {{ num_apuntes }}
-          {{ 'apunte' if num_apuntes == 1 else 'apuntes' }} sin ordenar →</a>
-      </p>
+    {% else %}
+      <p class="vacio-corto">{% if hechas_hoy %}¡Todo hecho por hoy! 🎉{% else %}Nada para hoy. Descansa 💜{% endif %}</p>
     {% endif %}
   </section>
 
-  {% if proximos %}
-    {% from "eventos/_macros.html" import fila_evento %}
-    <section class="resumen-agenda" aria-label="Agenda de hoy y mañana">
-      {% for nombre, eventos in proximos %}
-        <h2 class="titulo-panel">📅 {{ nombre }}</h2>
-        <ul class="lista-tareas">{% for e in eventos %}{{ fila_evento(e) }}{% endfor %}</ul>
-      {% endfor %}
-    </section>
-  {% endif %}
+  {# ── Eventos de hoy ── #}
+  <section class="panel hoy-bloque" aria-label="Eventos de hoy">
+    {{ cabecera("agenda", "📅", "Agenda de hoy", url_for('eventos.agenda')) }}
+    {% if eventos %}
+      <ul class="lista-tareas">{% for e in eventos %}{{ fila_evento(e) }}{% endfor %}</ul>
+    {% else %}
+      <p class="vacio-corto">Sin planes ni citas hoy.</p>
+    {% endif %}
+  </section>
 
-  <div class="acciones">
-    {# Se activa en la fase 6 #}
-    <button class="boton boton-secundario" type="button" disabled title="Próximamente">🌧️ Modo día malo</button>
+  {# ── Medicación ── #}
+  <section class="panel hoy-bloque" aria-label="Medicación de hoy">
+    {{ cabecera("medicacion", "💊", "Medicación", url_for('medicacion.inicio')) }}
+    {% if tomas %}
+      <ul class="lista-tareas">
+        {% for p in tomas %}{{ fila_programada(p, volver=url_for('inicio')) }}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="vacio-corto">No tienes medicación con horario. <a href="{{ url_for('medicacion.inicio') }}">Añadirla</a></p>
+    {% endif %}
+  </section>
+
+  {# ── Sueño y pasos, uno al lado del otro ── #}
+  <div class="hoy-cifras">
+    <a class="panel hoy-cifra" href="{{ url_for('cuerpo.sueno') }}">
+      <span class="titulo-con-mini">{{ icono("sueno", "😴", 30) }} Sueño</span>
+      {% if sueno and sueno.minutos_dormido is not none %}
+        <strong>{{ sueno.minutos_dormido // 60 }} h {{ sueno.minutos_dormido % 60 }} min</strong>
+        {% if sueno.hora_acostarse and sueno.hora_levantarse %}
+          <span class="ayuda">{{ sueno.hora_acostarse.strftime('%H:%M') }} – {{ sueno.hora_levantarse.strftime('%H:%M') }}</span>
+        {% endif %}
+      {% else %}
+        <strong>—</strong><span class="ayuda">Aún sin datos</span>
+      {% endif %}
+    </a>
+    <a class="panel hoy-cifra" href="{{ url_for('cuerpo.actividad') }}">
+      <span class="titulo-con-mini">{{ icono("actividad", "👣", 30) }} Pasos</span>
+      <strong>{{ '{:,}'.format(pasos).replace(',', '.') if pasos is not none else '—' }}</strong>
+      <span class="barra-fondo" role="progressbar" aria-label="Pasos de hoy" aria-valuemin="0"
+            aria-valuemax="{{ objetivo_pasos }}" aria-valuenow="{{ pasos or 0 }}">
+        <span class="barra-relleno" style="width: {{ por_ciento_pasos }}%"></span>
+      </span>
+      <span class="ayuda">de {{ '{:,}'.format(objetivo_pasos).replace(',', '.') }}</span>
+    </a>
   </div>
 
-  <ul class="secciones">
-    {% for seccion in secciones %}
-      <li>
-        {% if seccion.endpoint %}
-          <a class="tarjeta" href="{{ url_for(seccion.endpoint) }}">
-        {% else %}
-          <div class="tarjeta">
-        {% endif %}
-          {% set imagen = icono_url(seccion.imagen) %}
-          {% if imagen %}
-            <img class="tarjeta-imagen" src="{{ imagen }}" alt="" width="72" height="72">
-          {% else %}
-            <span class="tarjeta-icono" aria-hidden="true">{{ seccion.icono }}</span>
-          {% endif %}
-          <span class="tarjeta-titulo">{{ seccion.titulo }}</span>
-          <span class="tarjeta-texto">{{ seccion.texto }}</span>
-        {% if seccion.endpoint %}
-          </a>
-        {% else %}
-            <span class="etiqueta-pronto">Próximamente</span>
-          </div>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
+  {# Captura rápida: se guarda en la bandeja y se ordena después #}
+  {% from "captura/_macros.html" import formulario_apunte %}
+  <details class="panel captura hoy-apuntar">
+    <summary class="titulo-panel">＋ Apuntar algo rápido</summary>
+    {{ formulario_apunte(form_apunte, volver=url_for('inicio')) }}
+  </details>
+  {% if num_apuntes %}
+    <p class="captura-pendientes">
+      <a href="{{ url_for('captura.bandeja') }}">📥 Tienes {{ num_apuntes }}
+        {{ 'apunte' if num_apuntes == 1 else 'apuntes' }} sin ordenar →</a>
+    </p>
+  {% endif %}
 {% endblock %}

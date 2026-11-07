@@ -4,11 +4,12 @@
 #  Patricia Alonso · patriciaalonso.es
 # ══════════════════════════════════════════════════════════════
 
-from datetime import date
+from datetime import date, time
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+from auth import _destino_seguro
 from extensions import db
 from formularios import FormularioTarea
 from models import Tarea
@@ -33,7 +34,7 @@ def _pintar_listado():
     pendientes = db.session.scalars(
         db.select(Tarea).filter_by(usuario_id=current_user.id, completada=False)
     ).all()
-    pendientes.sort(key=lambda t: (t.fecha is None, t.fecha or date.max, t.creado_en))
+    pendientes.sort(key=lambda t: (t.fecha is None, t.fecha or date.max, t.hora is None, t.hora or time.max, t.creado_en))
     completadas = db.session.scalars(
         db.select(Tarea)
         .filter_by(usuario_id=current_user.id, completada=True)
@@ -96,7 +97,8 @@ def completar(tarea_id):
     tarea = _tarea_propia(tarea_id)
     tarea.marcar_completada(not tarea.completada)
     db.session.commit()
-    return redirect(url_for("tareas.listado"))
+    destino = request.form.get("volver")
+    return redirect(_destino_seguro(destino) if destino else url_for("tareas.listado"))
 
 
 @bp.post("/<int:tarea_id>/borrar")

@@ -135,8 +135,8 @@ def test_resumen_en_el_inicio(cliente_con_sesion):
     _nuevo(cliente_con_sesion, "Dentista", fecha=HOY + timedelta(days=1), tipo="cita")
     _nuevo(cliente_con_sesion, "Lejano", fecha=HOY + timedelta(days=5))
     texto = cliente_con_sesion.get("/").get_data(as_text=True)
-    assert "📅 Hoy" in texto and "📅 Mañana" in texto
-    assert "Fisio" in texto and "Dentista" in texto and "Lejano" not in texto
+    assert "Agenda de hoy" in texto
+    assert "Fisio" in texto and "Dentista" not in texto and "Lejano" not in texto   # solo lo de hoy
 
 
 def test_editar_y_borrar(cliente_con_sesion):

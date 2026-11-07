@@ -36,16 +36,18 @@ def test_zona_horaria_inventada(cliente_con_sesion):
 
 def test_barra_de_navegacion(cliente_con_sesion):
     texto = cliente_con_sesion.get("/").get_data(as_text=True)
-    for destino in ('href="/"', 'href="/eventos/"', 'href="/apuntar/"', 'href="/salud/"', 'href="/perfil/"'):
+    for destino in ('href="/"', 'href="/eventos/"', 'href="/tareas/"', 'href="/salud/"', 'href="/nutricion/"',
+                    'href="/compra/"', 'href="/diario/"', 'href="/notas/"', 'href="/perfil/"'):
         assert destino in texto
+    assert 'nav-tareas nav-activo' in cliente_con_sesion.get("/tareas/").get_data(as_text=True)
     # Se ilumina la sección en la que estás
     assert 'nav-salud nav-activo' in cliente_con_sesion.get("/salud/medicacion/").get_data(as_text=True)
     assert 'nav-agenda nav-activo' in cliente_con_sesion.get("/eventos/").get_data(as_text=True)
 
 
 def test_volver_al_inicio_desde_las_secciones(cliente_con_sesion):
-    for ruta in ("/tareas/", "/notas/", "/compra/", "/diario/"):
-        assert "← Inicio" in cliente_con_sesion.get(ruta).get_data(as_text=True)
+    # Las secciones ya están en la barra: solo la bandeja lleva «← Inicio»
+    assert "← Inicio" in cliente_con_sesion.get("/apuntar/").get_data(as_text=True)
     assert "← Inicio" not in cliente_con_sesion.get("/").get_data(as_text=True)
 
 

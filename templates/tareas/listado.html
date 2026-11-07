@@ -16,6 +16,7 @@
     {% if not tarea.completada and tarea.fecha %}
       <span class="tarea-cuando{% if tarea.fecha < hoy %} tarea-atrasada{% elif tarea.fecha == hoy %} tarea-hoy{% endif %}">
         {%- if tarea.fecha == hoy %}Hoy{% elif tarea.fecha < hoy %}{{ tarea.fecha|fecha_corta }} ⚠️{% else %}{{ tarea.fecha|fecha_corta }}{% endif -%}
+        {%- if tarea.hora %} · {{ tarea.hora.strftime('%H:%M') }}{% endif -%}
       </span>
     {% endif %}
   </li>
