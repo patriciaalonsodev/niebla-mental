@@ -116,27 +116,56 @@ def _lineas(valor):
     return [linea.strip() for linea in str(valor or "").splitlines() if linea.strip()]
 
 
-def _tramos_de_sueno(inicios, finales, zona):
+_FASES = {   # cómo llama Salud a cada fase (español e inglés) → nuestra fase
+    "profundo": "profundo", "deep": "profundo",
+    "rem": "rem",
+    "principal": "ligero", "núcleo": "ligero", "nucleo": "ligero", "ligero": "ligero", "core": "ligero",
+    "despierto": "despierto", "awake": "despierto",
+    "en cama": "cama", "in bed": "cama", "inbed": "cama",
+}
+
+
+def _fase(texto):
+    texto = texto.lower()
+    for nombre, fase in _FASES.items():
+        if nombre in texto:
+            return fase
+    return "dormido"          # «Dormido» sin fase (iPhone u otras apps)
+
+
+def _tramos_de_sueno(inicios, finales, zona, valores=None):
     """Con todos los tramos de la noche (inicio y fin de cada muestra)
     calcula el tiempo dormido como Salud: suma los tramos sin contar dos
-    veces los que se pisan (reloj + iPhone). Las horas de la tarde/noche
-    (desde las 15:00) se cuentan como del día anterior.
-    Devuelve (acostarse, levantarse, minutos) o None si no hay tramos."""
+    veces los que se pisan (reloj + iPhone). Si llegan las fases (Valor)
+    y hay fases del reloj, se ignoran los «Dormido» genéricos, los ratos
+    despierto y «En cama», igual que hace Salud. Las horas desde las 15:00
+    se cuentan como del día anterior.
+    Devuelve (acostarse, levantarse, minutos, fases) o None si no hay tramos."""
     inicios, finales = _lineas(inicios), _lineas(finales)
     if len(inicios) < 2 or len(inicios) != len(finales):
         return None
+    valores = _lineas(valores)
+    fases_muestra = [_fase(v) for v in valores] if len(valores) == len(inicios) else ["dormido"] * len(inicios)
 
     def minuto(hora):
         m = hora.hour * 60 + hora.minute
         return m - 1440 if hora.hour >= 15 else m
 
-    tramos = []
-    for ini, fin in zip(inicios, finales):
+    todos = []
+    for ini, fin, fase in zip(inicios, finales, fases_muestra):
         a, b = minuto(_hora(ini, zona)), minuto(_hora(fin, zona))
         if b < a:
             b += 1440
-        tramos.append((a, b))
-    tramos.sort()
+        todos.append((a, b, fase))
+
+    hay_fases = any(f in ("profundo", "rem", "ligero") for *_, f in todos)
+    validas = ("profundo", "rem", "ligero") if hay_fases else ("dormido",)
+    elegidos = [t for t in todos if t[2] in validas] or todos
+    fases = {}
+    for a, b, f in todos:
+        if f in ("profundo", "rem", "ligero", "despierto") and hay_fases:
+            fases[f"minutos_{f}"] = fases.get(f"minutos_{f}", 0) + (b - a)
+    tramos = sorted((a, b) for a, b, _ in elegidos)
 
     total, actual = 0, list(tramos[0])
     for a, b in tramos[1:]:
@@ -151,7 +180,7 @@ def _tramos_de_sueno(inicios, finales, zona):
         m %= 1440
         return time(m // 60, m % 60)
 
-    return a_hora(tramos[0][0]), a_hora(max(b for _, b in tramos)), min(total, 1440)
+    return a_hora(tramos[0][0]), a_hora(max(b for _, b in tramos)), min(total, 1440), fases
 
 
 def _fecha(valor, hoy):
@@ -218,12 +247,14 @@ def recibir():
         # También vale sin «diccionario»: acostarse / levantarse sueltos
         if not isinstance(sueno, dict) and any(datos.get(k) for k in ("acostarse", "levantarse", "horas_sueno")):
             sueno = {"acostarse": datos.get("acostarse"), "levantarse": datos.get("levantarse"),
-                     "horas": datos.get("horas_sueno"), "fecha": datos.get("fecha_sueno")}
+                     "horas": datos.get("horas_sueno"), "fecha": datos.get("fecha_sueno"),
+                     "fases": datos.get("fases")}
         if isinstance(sueno, dict):
             minutos = _numero(sueno.get("minutos"), entero=True, maximo=1440)
-            tramos = _tramos_de_sueno(sueno.get("acostarse"), sueno.get("levantarse"), zona)
+            tramos = _tramos_de_sueno(sueno.get("acostarse"), sueno.get("levantarse"), zona, sueno.get("fases"))
+            fases_reloj = {}
             if tramos:
-                acostarse, levantarse, dormido = tramos
+                acostarse, levantarse, dormido, fases_reloj = tramos
                 if minutos is None:
                     minutos = dormido
             else:
@@ -234,6 +265,9 @@ def recibir():
                 minutos = minutos_entre(acostarse, levantarse)
             fases = {f"minutos_{f}": _numero(sueno.get(f), entero=True, maximo=1440)
                      for f in ("profundo", "rem", "ligero", "despierto")}
+            for clave, valor in fases_reloj.items():
+                if fases[clave] is None:
+                    fases[clave] = min(valor, 1440)
             if minutos is not None or any(v is not None for v in fases.values()):
                 guardar_sueno(usuario.id, _fecha(sueno.get("fecha"), hoy), "reloj",
                               minutos_dormido=minutos, hora_acostarse=acostarse,

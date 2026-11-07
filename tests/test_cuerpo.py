@@ -220,3 +220,17 @@ def test_sueno_con_todos_los_tramos_de_la_noche(cliente_con_sesion):
     assert "sueño 7 h 0 min (de 23:50 a 09:12)" in respuesta.get_json()["mensaje"]
     noche = RegistroSueno.query.one()
     assert (noche.hora_acostarse, noche.hora_levantarse, noche.minutos_dormido) == (time(23, 50), time(9, 12), 420)
+
+
+def test_sueno_ignora_el_dormido_generico_si_hay_fases(cliente_con_sesion):
+    # El iPhone pone un «Dormido» de toda la noche; el reloj, las fases
+    clave = _crear_clave(cliente_con_sesion)
+    respuesta = _enviar(cliente_con_sesion, clave, {
+        "acostarse": "7 nov 2026, 2:27\n7 nov 2026, 2:30\n7 nov 2026, 4:00\n7 nov 2026, 4:10\n7 nov 2026, 6:00",
+        "levantarse": "7 nov 2026, 9:58\n7 nov 2026, 4:00\n7 nov 2026, 4:10\n7 nov 2026, 6:00\n7 nov 2026, 9:12",
+        "fases": "Dormido\nPrincipal\nDespierto\nProfundo\nREM",
+    })
+    # 90 + 110 + 192 = 392 min (6 h 32), sin los 10 min despierta
+    assert "sueño 6 h 32 min (de 02:30 a 09:12)" in respuesta.get_json()["mensaje"]
+    noche = RegistroSueno.query.one()
+    assert (noche.minutos_ligero, noche.minutos_profundo, noche.minutos_rem, noche.minutos_despierto) == (90, 110, 192, 10)
