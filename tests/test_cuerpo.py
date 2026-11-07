@@ -248,3 +248,11 @@ def test_sueno_solo_la_ultima_noche_y_sin_vigilia(cliente_con_sesion):
     assert "sueño 6 h 36 min (de 02:27 a 09:13)" in respuesta.get_json()["mensaje"]
     noche = RegistroSueno.query.one()
     assert (noche.minutos_profundo, noche.minutos_ligero, noche.minutos_despierto) == (33, 363, 10)
+
+
+def test_sueno_diagnostico(cliente_con_sesion):
+    clave = _crear_clave(cliente_con_sesion)
+    respuesta = cliente_con_sesion.post("/api/salud?diagnostico=1", json={
+        "acostarse": "7 nov 2026, 2:27\n7 nov 2026, 3:00", "levantarse": "7 nov 2026, 3:00\n7 nov 2026, 9:13",
+        "fases": "Esencial\nREM"}, headers={"Authorization": f"Bearer {clave}"})
+    assert "fechas leídas: sí" in respuesta.get_json()["mensaje"]

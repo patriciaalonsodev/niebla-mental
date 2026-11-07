@@ -12,6 +12,7 @@
 # ══════════════════════════════════════════════════════════════
 
 import hashlib
+import os
 import re
 import secrets
 from datetime import date, datetime, time, timedelta
