@@ -83,6 +83,7 @@ def create_app(nombre_config=None):
             "volver_inicio": request.endpoint in LISTADOS_CON_VOLVER,
             "logo_url": _url_logo(app),
             "icono_url": lambda nombre: _url_icono(app, nombre),
+            "icono": lambda nombre, emoji="", tam=24: _icono(app, nombre, emoji, tam),
         }
 
     _registrar_rutas_basicas(app)
@@ -130,6 +131,15 @@ def _url_icono(app, nombre):
     if not nombre or not os.path.exists(ruta):
         return None
     return url_for("static", filename=f"img/iconos/{nombre}.png", v=int(os.path.getmtime(ruta)))
+
+
+def _icono(app, nombre, emoji, tam):
+    """Tu icono propio en pequeño (junto a un texto) o, si no existe, el emoji."""
+    from markupsafe import Markup, escape
+    url = _url_icono(app, nombre)
+    if not url:
+        return escape(emoji)
+    return Markup(f'<img class="icono-mini" src="{url}" alt="" width="{int(tam)}" height="{int(tam)}">')
 
 
 def _url_logo(app):

@@ -70,6 +70,17 @@
 
   let activo = null;                           // solo un micrófono a la vez
 
+  // El micrófono propio de la app (si existe) o el emoji
+  function ponerMicro(boton) {
+    const url = document.body.dataset.microfono;
+    if (!url) { boton.textContent = "🎤"; return; }
+    boton.textContent = "";
+    const img = document.createElement("img");
+    img.src = url; img.alt = ""; img.width = 22; img.height = 22;
+    img.className = "icono-mini";
+    boton.appendChild(img);
+  }
+
   function preparar(campo) {
     if (campo.dataset.dictadoListo || campo.closest("[data-sin-dictado]") || campo.hasAttribute("data-sin-dictado")) return;
     if (campo.readOnly || campo.disabled || campo.type === "hidden") return;
@@ -84,7 +95,7 @@
     const boton = document.createElement("button");
     boton.type = "button";
     boton.className = "dictado-boton";
-    boton.textContent = "🎤";
+    ponerMicro(boton);
     const nombre = (campo.labels && campo.labels[0] && campo.labels[0].textContent.trim()) || "este campo";
     boton.setAttribute("aria-label", `Dictar por voz: ${nombre}`);
     boton.title = "Dictar por voz (el navegador convierte tu voz en texto)";
@@ -130,7 +141,7 @@
         campo.value = base;
         avisar(campo);
         boton.classList.remove("escuchando");
-        boton.textContent = "🎤";
+        ponerMicro(boton);
         boton.setAttribute("aria-label", `Dictar por voz: ${nombre}`);
         campo.classList.remove("dictando");
         if (activo && activo.rec === rec) activo = null;

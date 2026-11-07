@@ -37,7 +37,7 @@
     {% if comidas or momento not in ('media_manana', 'picoteo') %}
       <section class="momento-comida">
         <div class="momento-cabecera">
-          <h3>{{ nombre }}</h3>
+          <h3 class="titulo-con-mini">{% if icono_url(momento) %}{{ icono(momento, tam=30) }} {{ nombre.split(' ', 1)[1] }}{% else %}{{ nombre }}{% endif %}</h3>
           {% if comidas %}<span class="ayuda">{{ comidas|sum(attribute='kcal')|round|int }} kcal</span>{% endif %}
           <a class="boton-redondo boton-redondo-mini" href="{{ url_for('nutricion.anadir', momento=momento, fecha=fecha.isoformat()) }}"
              aria-label="Añadir a {{ nombre[2:]|trim }}">＋</a>

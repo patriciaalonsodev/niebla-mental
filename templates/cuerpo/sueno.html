@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_campos.html" import campo %}
 {% from "salud/_pestanas.html" import pestanas with context %}
-{% from "cuerpo/_macros.html" import barras, aviso_reloj %}
+{% from "cuerpo/_macros.html" import barras, aviso_reloj with context %}
 
 {% block titulo %}Sueño{% endblock %}
 
@@ -11,7 +11,7 @@
 
   {% if not current_user.api_token_hash %}
     <a class="aviso-conectar" href="{{ url_for('cuerpo.conectar') }}">
-      ⌚ <span><strong>Conecta tu reloj o tus apps de salud</strong> para que esto se rellene solo.</span> ›
+      {{ icono("reloj", "⌚", 28) }} <span><strong>Conecta tu reloj o tus apps de salud</strong> para que esto se rellene solo.</span> ›
     </a>
   {% endif %}
 
@@ -34,7 +34,7 @@
         </ul>
       {% endif %}
     {% else %}
-      <p class="ayuda">Aún no hay datos de esta noche. Apúntala abajo o conecta tu reloj en «⌚ Conectar».</p>
+      <p class="ayuda">Aún no hay datos de esta noche. Apúntala abajo o conecta tu reloj en «Conectar».</p>
     {% endif %}
   </section>
 
@@ -46,7 +46,7 @@
   </section>
 
   <details class="panel panel-plegable" {% if form.errors or not anoche %}open{% endif %}>
-    <summary class="titulo-panel">✍️ Apuntar la noche a mano</summary>
+    <summary class="titulo-panel">{{ icono("mano", "✍️") }} Apuntar la noche a mano</summary>
     <form method="post" action="{{ url_for('cuerpo.guardar_sueno_manual') }}" novalidate class="formulario">
       {{ form.hidden_tag() }}
       {{ campo(form.fecha) }}

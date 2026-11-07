@@ -1854,3 +1854,8 @@ a.boton-redondo { text-decoration: none; }
 .guia-necesitas .boton { margin-top: 0.3rem; }
 .pestana-imagen { width: 30px; height: 30px; object-fit: contain; }
 .pestana:not(.pestana-activa) .pestana-imagen { opacity: 0.85; }
+
+/* Iconos propios en pequeño, junto a un texto */
+.icono-mini { display: inline-block; vertical-align: middle; object-fit: contain; margin-top: -0.15em; }
+.titulo-con-mini { display: flex; align-items: center; gap: 0.45rem; }
+.dictado-boton .icono-mini, #boton-voz .icono-mini { margin: 0; }

@@ -11,7 +11,7 @@
   <div class="diario-barra">
     <h1 class="titulo-con-icono">{% if icono_url("diario") %}<img src="{{ icono_url("diario") }}" alt="" width="44" height="44">{% endif %}Diario</h1>
     <a class="boton-redondo boton-redondo-principal" href="{{ url_for('diario.formulario_nueva') }}"
-       aria-label="Escribir una página nueva" title="Escribir">✍️</a>
+       aria-label="Escribir una página nueva" title="Escribir">{{ icono("mano", "✍️", 30) }}</a>
   </div>
   <details class="mas-opciones diario-buscar" {% if busqueda or etiqueta_activa %}open{% endif %}>
       <summary>🔍 Buscar o filtrar</summary>
@@ -68,7 +68,7 @@
   {% else %}
     <article class="hoja-diario hoja-vacia">
       <p class="hoja-texto">Tu diario está esperando la primera página 💜</p>
-      <p><a class="boton" href="{{ url_for('diario.formulario_nueva') }}">✍️ Empezar a escribir</a></p>
+      <p><a class="boton" href="{{ url_for('diario.formulario_nueva') }}">{{ icono("mano", "✍️") }} Empezar a escribir</a></p>
     </article>
   {% endif %}
 {% endblock %}

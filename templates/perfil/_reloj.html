@@ -1,7 +1,7 @@
 {# Conexión con el reloj: Apple Salud (Atajos) o Android #}
 <section class="panel" aria-labelledby="titulo-reloj" id="reloj">
   <h2 id="titulo-reloj" class="titulo-panel">
-    ⌚ Reloj y Apple Salud
+    {{ icono("reloj", "⌚") }} Reloj y Apple Salud
     {% if current_user.api_token_hash %}<span class="contador">Conectado</span>{% endif %}
   </h2>
 

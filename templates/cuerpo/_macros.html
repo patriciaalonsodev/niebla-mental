@@ -18,5 +18,5 @@
 {% endmacro %}
 
 {% macro aviso_reloj(origen) %}
-  {% if origen == 'reloj' %}<span class="de-google" title="Llegó desde el reloj">⌚ del reloj</span>{% endif %}
+  {% if origen == 'reloj' %}<span class="de-google" title="Llegó desde el reloj">{{ icono("reloj", "⌚", 16) }} del reloj</span>{% endif %}
 {% endmacro %}

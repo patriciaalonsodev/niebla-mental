@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-title" content="{{ nombre_app }}">
   {% block cabeza %}{% endblock %}
 </head>
-<body>
+<body data-microfono="{{ icono_url('microfono') or '' }}">
   <header class="cabecera">
     <a class="marca" href="{{ url_for('inicio') }}">
       {% if logo_url %}

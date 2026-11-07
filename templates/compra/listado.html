@@ -26,7 +26,7 @@
     {{ form.nombre(autocomplete="off", placeholder="Añadir… (p. ej. «2 leches»)", enterkeyhint="done",
                    **({"aria-invalid": "true", "aria-describedby": "error-compra"} if form.nombre.errors else {})) }}
     <button class="boton-redondo" type="button" id="boton-voz" hidden
-            aria-label="Dictar por voz" title="Dictar por voz">🎤</button>
+            aria-label="Dictar por voz" title="Dictar por voz">{{ icono("microfono", "🎤", 26) }}</button>
     <button class="boton-redondo" type="button" id="boton-escanear" hidden
             aria-label="Escanear código de barras" title="Escanear código de barras">📷</button>
     <button class="boton-redondo boton-redondo-principal" type="submit" aria-label="Añadir a la lista">＋</button>
