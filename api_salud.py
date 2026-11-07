@@ -328,7 +328,9 @@ def recibir():
                         texto += (f" [inicios {len(_lineas(sueno.get('acostarse')))}, finales {len(_lineas(sueno.get('levantarse')))},"
                                   f" fases {sum(valores.values())}: "
                                   + ", ".join(f"{v[:25]}×{n}" for v, n in valores.most_common(8))
-                                  + f" | primeras: {' / '.join(_lineas(sueno.get('acostarse'))[:2])[:80]}]")
+                                  + f" | primeras: {' / '.join(_lineas(sueno.get('acostarse'))[:2])[:80]}"
+                                  + f" | fechas leídas: {'sí' if all(_momento(x, zona) for x in _lineas(sueno.get('acostarse'))) else 'no'}"
+                                  + f" | versión {os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local')[:7]}]")
                     guardado.append(texto)
     except (ValueError, TypeError, AttributeError, IndexError) as error:
         db.session.rollback()
