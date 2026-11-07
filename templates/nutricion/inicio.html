@@ -71,12 +71,23 @@
       </section>
     {% endif %}
   {% endfor %}
-  <p class="ayuda"><a href="{{ url_for('nutricion.anadir', momento='picoteo', fecha=fecha.isoformat()) }}">＋ Media mañana o picoteo</a></p>
+  <a class="boton boton-secundario boton-ancho boton-picoteo"
+     href="{{ url_for('nutricion.anadir', momento='picoteo', fecha=fecha.isoformat()) }}">＋ Media mañana o picoteo</a>
 
-  {% if grafica %}
-    <section class="panel">
-      <h2 class="titulo-panel">⚖️ Tu peso <a class="ayuda" href="{{ url_for('nutricion.peso') }}">Apuntar</a></h2>
-      {{ grafica_peso(grafica) }}
-    </section>
-  {% endif %}
+  {# El peso, en una sola fila: la gráfica completa está en la pestaña «Peso» #}
+  <a class="panel peso-compacto" href="{{ url_for('nutricion.peso') }}">
+    {{ icono("balanza", "⚖️", 44) }}
+    <span class="peso-compacto-texto">
+      <span>Tu peso</span>
+      {% if grafica %}
+        <strong>{{ grafica.ultimo.kg|kg }} kg</strong>
+        {% if grafica.puntos|length > 1 and grafica.diferencia %}
+          <span class="ayuda">{{ '▼' if grafica.diferencia < 0 else '▲' }} {{ grafica.diferencia|abs|kg }} kg desde el {{ grafica.primero.fecha|fecha_corta }}</span>
+        {% endif %}
+      {% else %}
+        <span class="ayuda">Aún sin apuntar</span>
+      {% endif %}
+    </span>
+    <span class="hoy-enlace">Apuntar ›</span>
+  </a>
 {% endblock %}

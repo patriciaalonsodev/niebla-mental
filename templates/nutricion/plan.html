@@ -31,7 +31,7 @@
   <form method="post" action="{{ url_for('nutricion.plan') }}" novalidate class="formulario">
     {{ form.hidden_tag() }}
     <section class="panel">
-      <h2 class="titulo-panel">{{ icono("datos", "📏") }} Tus datos</h2>
+      <h2 class="titulo-panel titulo-con-mini">{{ icono("datos", "📏", 40) }} Tus datos</h2>
       {{ opciones(form.sexo) }}
       <div class="campos-fila campos-fila-3">
         {{ campo(form.edad, autocomplete="off") }}
@@ -49,7 +49,7 @@
     </section>
 
     <section class="panel">
-      <h2 class="titulo-panel">{{ icono("mano", "✍️") }} Ajustar a mano</h2>
+      <h2 class="titulo-panel titulo-con-mini">{{ icono("mano", "✍️") }} Ajustar a mano</h2>
       <p class="ayuda">Si tu nutricionista te ha dado otras cifras, ponlas aquí.</p>
       <div class="campos-fila campos-fila-2">
         {{ campo(form.kcal, autocomplete="off") }}

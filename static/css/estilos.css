@@ -1892,3 +1892,11 @@ a.boton-redondo { text-decoration: none; }
 .hoy-cifra .barra-fondo { display: block; }
 .hoy-cifra .barra-relleno { display: block; height: 100%; }
 .hoy-apuntar > summary { cursor: pointer; }
+
+/* Nutrición: picoteo como botón y el peso en una fila */
+.boton-picoteo { margin: 0.25rem 0 1rem; text-decoration: none; text-align: center; }
+.peso-compacto { display: flex; align-items: center; gap: 0.75rem; color: inherit; text-decoration: none; padding: 0.75rem 1rem; }
+.peso-compacto-texto { display: grid; flex: 1; gap: 0.1rem; }
+.peso-compacto-texto strong { font-size: 1.3rem; }
+
+[data-tema="claro"] .campo select { background: var(--superficie-alta); color: var(--texto); }

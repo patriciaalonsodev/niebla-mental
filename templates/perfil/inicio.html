@@ -40,7 +40,7 @@
   </script>
 
   <section class="panel" aria-labelledby="titulo-datos">
-    <h2 id="titulo-datos" class="titulo-panel">👤 Tus datos</h2>
+    <h2 id="titulo-datos" class="titulo-panel titulo-con-mini">{{ icono("perfil", "👤", 36) }} Tus datos</h2>
     <form method="post" action="{{ url_for('perfil.guardar') }}" novalidate class="formulario">
       {{ form.hidden_tag() }}
       {{ campo(form.nombre, autocomplete="given-name") }}
@@ -55,6 +55,14 @@
       {{ campo(form.zona_horaria) }}
       <button class="boton boton-ancho" type="submit">Guardar</button>
     </form>
+    <script>
+      // El aspecto cambia al tocarlo y se guarda solo
+      document.querySelectorAll('input[name="{{ form.tema.name }}"]').forEach((radio) =>
+        radio.addEventListener("change", () => {
+          document.documentElement.dataset.tema = radio.value;
+          radio.form.requestSubmit();
+        }));
+    </script>
   </section>
 
   {% include "perfil/_google.html" %}

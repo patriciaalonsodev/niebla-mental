@@ -57,7 +57,7 @@ ICONOS = {
     "sueno": "sueno", "conectar": "conectar",
     "hoy": "hoy", "plan": "plan", "alimentos": "alimentos", "peso": "peso", "recetas": "recetas",
     "microfono": "microfono", "mano": "mano", "objetivo": "objetivo", "reloj": "reloj", "datos": "datos",
-    "desayuno": "desayuno", "comida": "comida", "merienda": "merienda", "cena": "cena",
+    "balanza": "balanza", "desayuno": "desayuno", "comida": "comida", "merienda": "merienda", "cena": "cena",
 }
 LADO_ICONO = 144          # se ven a 48–72 px: así quedan nítidos en pantallas retina
 

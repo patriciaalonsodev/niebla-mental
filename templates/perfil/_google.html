@@ -1,7 +1,7 @@
 {# Panel de Google Calendar (en el perfil) #}
 <section class="panel panel-google" aria-labelledby="titulo-google" id="google">
-  <h2 id="titulo-google" class="titulo-panel">
-    📆 Google Calendar
+  <h2 id="titulo-google" class="titulo-panel titulo-con-mini">
+    {{ icono("agenda", "📆", 36) }} Google Calendar
     {% if google.conexion %}<span class="contador">Conectado</span>{% endif %}
   </h2>
   {% if google.conexion %}
