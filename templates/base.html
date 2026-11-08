@@ -26,33 +26,54 @@
   </header>
 
   {% if current_user.is_authenticated %}
-    {# Todas las secciones: abajo en el móvil, a la izquierda en el PC #}
+    {# Móvil: 4 botones grandes + «Más» (abre un panel con el resto).
+       PC: todas las secciones en una columna a la izquierda. #}
+    {% set secciones_nav = [
+         ('inicio', 'inicio', '🏠', 'Inicio', true),
+         ('agenda', 'eventos.agenda', '📅', 'Agenda', true),
+         ('tareas', 'tareas.listado', '✅', 'Tareas', true),
+         ('salud', 'salud.inicio', '💊', 'Salud', true),
+         ('nutricion', 'nutricion.inicio', '🥗', 'Nutrición', false),
+         ('compra', 'compra.listado', '🛒', 'Compra', false),
+         ('diario', 'diario.listado', '📖', 'Diario', false),
+         ('notas', 'notas.listado', '📝', 'Notas', false),
+         ('perfil', 'perfil.inicio', '👤', 'Perfil', false),
+       ] %}
+    {% macro icono_nav(clave, icono, tam=36) %}
+      {%- set imagen = icono_url(clave) -%}
+      {%- if clave == 'perfil' and current_user.foto -%}
+        <img class="nav-icono avatar avatar-nav" src="{{ url_for('perfil.foto', v=current_user.foto_version) }}" alt="">
+      {%- elif imagen -%}
+        <img class="nav-icono nav-imagen" src="{{ imagen }}" alt="" width="{{ tam }}" height="{{ tam }}">
+      {%- else -%}
+        <span class="nav-icono" aria-hidden="true">{{ icono }}</span>
+      {%- endif -%}
+    {% endmacro %}
+    {% set en_mas = seccion_activa in ('nutricion', 'compra', 'diario', 'notas', 'perfil') %}
     <nav class="navegacion" aria-label="Principal">
-      {% for clave, endpoint, icono, texto in [
-           ('inicio', 'inicio', '🏠', 'Inicio'),
-           ('agenda', 'eventos.agenda', '📅', 'Agenda'),
-           ('tareas', 'tareas.listado', '✅', 'Tareas'),
-           ('salud', 'salud.inicio', '💊', 'Salud'),
-           ('nutricion', 'nutricion.inicio', '🥗', 'Nutrición'),
-           ('compra', 'compra.listado', '🛒', 'Compra'),
-           ('diario', 'diario.listado', '📖', 'Diario'),
-           ('notas', 'notas.listado', '📝', 'Notas'),
-           ('perfil', 'perfil.inicio', '👤', 'Perfil'),
-         ] %}
-        <a class="nav-enlace nav-{{ clave }}{% if seccion_activa == clave %} nav-activo{% endif %}"
+      {% for clave, endpoint, icono, texto, principal in secciones_nav %}
+        <a class="nav-enlace nav-{{ clave }}{% if not principal %} nav-secundaria{% endif %}{% if seccion_activa == clave %} nav-activo{% endif %}"
            href="{{ url_for(endpoint) }}" title="{{ texto }}" {% if seccion_activa == clave %}aria-current="page"{% endif %}>
-          {% set imagen = icono_url(clave) %}
-          {% if clave == 'perfil' and current_user.foto %}
-            <img class="nav-icono avatar avatar-nav" src="{{ url_for('perfil.foto', v=current_user.foto_version) }}" alt="">
-          {% elif imagen %}
-            <img class="nav-icono nav-imagen" src="{{ imagen }}" alt="" width="36" height="36">
-          {% else %}
-            <span class="nav-icono" aria-hidden="true">{{ icono }}</span>
-          {% endif %}
+          {{ icono_nav(clave, icono) }}
           <span class="nav-texto">{{ texto }}</span>
         </a>
       {% endfor %}
+      <button class="nav-enlace nav-mas{% if en_mas %} nav-activo{% endif %}" type="button"
+              popovertarget="menu-mas" aria-label="Más secciones">
+        <span class="nav-icono nav-mas-icono" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="nav-texto">Más</span>
+      </button>
     </nav>
+
+    <div id="menu-mas" class="menu-mas" popover>
+      <ul class="menu-mas-lista">
+        {% for clave, endpoint, icono, texto, principal in secciones_nav if not principal %}
+          <li><a class="menu-mas-enlace{% if seccion_activa == clave %} nav-activo{% endif %}" href="{{ url_for(endpoint) }}">
+            {{ icono_nav(clave, icono, 56) }}<span>{{ texto }}</span></a></li>
+        {% endfor %}
+      </ul>
+      <button class="boton boton-secundario boton-ancho" type="button" popovertarget="menu-mas" popovertargetaction="hide">Cerrar</button>
+    </div>
   {% endif %}
 
   <main class="contenido">

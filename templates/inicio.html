@@ -53,12 +53,23 @@
   {# ── Medicación ── #}
   <section class="panel hoy-bloque" aria-label="Medicación de hoy">
     {{ cabecera("medicacion", "💊", "Medicación", url_for('medicacion.inicio')) }}
-    {% if tomas %}
-      <ul class="lista-tareas">
-        {% for p in tomas %}{{ fila_programada(p, volver=url_for('inicio')) }}{% endfor %}
-      </ul>
-    {% else %}
+    {% if not total_tomas %}
       <p class="vacio-corto">No tienes medicación con horario. <a href="{{ url_for('medicacion.inicio') }}">Añadirla</a></p>
+    {% else %}
+      {# Solo lo que te toca ya (para marcarlo) y la siguiente toma #}
+      {% if tomas_toca %}
+        <ul class="lista-tareas">
+          {% for p in tomas_toca %}{{ fila_programada(p, volver=url_for('inicio')) }}{% endfor %}
+        </ul>
+      {% endif %}
+      {% if siguiente %}
+        <p class="med-siguiente">⏭️ Siguiente: <strong>{{ siguiente.hora.strftime('%H:%M') }}</strong> ·
+          {{ siguiente.medicamento.nombre }}{% if siguiente.medicamento.dosis %} <span class="ayuda">{{ siguiente.medicamento.dosis }}</span>{% endif %}</p>
+      {% endif %}
+      <p class="med-resumen">
+        {%- if tomadas == total_tomas %}✓ Todo tomado hoy 💜
+        {%- else %}✓ {{ tomadas }} de {{ total_tomas }} tomadas hoy{% endif -%}
+      </p>
     {% endif %}
   </section>
 

@@ -1900,3 +1900,33 @@ a.boton-redondo { text-decoration: none; }
 .peso-compacto-texto strong { font-size: 1.3rem; }
 
 [data-tema="claro"] .campo select { background: var(--superficie-alta); color: var(--texto); }
+
+
+/* ── Barra del móvil: 4 botones grandes + «Más» ───────────── */
+.nav-mas { border: 0; background: none; font: inherit; cursor: pointer; }
+.nav-mas-icono { display: grid; grid-auto-flow: column; gap: 4px; place-items: center; width: 40px; height: 40px;
+  border-radius: 50%; background: rgb(201 182 247 / 0.18); }
+.nav-mas-icono span { width: 7px; height: 7px; border-radius: 50%; background: var(--lavanda); }
+@media (max-width: 899px) {
+  .navegacion { grid-template-columns: repeat(5, 1fr); padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom)); }
+  .nav-secundaria { display: none; }
+  .nav-enlace { min-height: 58px; }
+  .navegacion .nav-imagen, .navegacion .avatar-nav { width: 44px; height: 44px; }
+}
+@media (min-width: 900px) { .nav-mas { display: none; } }
+
+/* El panel «Más»: sube desde abajo con iconos grandes */
+.menu-mas {
+  position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 520px; margin-inline: auto;
+  padding: 1.25rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  border: 1px solid var(--borde); border-radius: 26px 26px 0 0;
+  background: var(--superficie); color: var(--texto); box-shadow: var(--relieve-alto);
+}
+.menu-mas::backdrop { background: rgb(10 5 25 / 0.55); }
+.menu-mas-lista { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.menu-mas-enlace { display: grid; justify-items: center; gap: 0.35rem; padding: 0.8rem 0.3rem; border-radius: 18px;
+  background: var(--superficie-alta); color: var(--texto); text-decoration: none; font-weight: 600; }
+.menu-mas-enlace .nav-imagen, .menu-mas-enlace .avatar-nav { width: 56px; height: 56px; }
+
+.med-siguiente { margin: 0.4rem 0 0.2rem; }
+.med-resumen { margin: 0.2rem 0 0; color: var(--texto-suave); font-size: 0.95rem; }

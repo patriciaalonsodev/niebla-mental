@@ -19,6 +19,11 @@
         {%- if tarea.hora %} · {{ tarea.hora.strftime('%H:%M') }}{% endif -%}
       </span>
     {% endif %}
+    <form method="post" action="{{ url_for('tareas.borrar', tarea_id=tarea.id) }}"
+          onsubmit="return confirm('¿Borrar esta tarea?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="compra-quitar" type="submit" aria-label="Borrar la tarea: {{ tarea.titulo }}">✕</button>
+    </form>
   </li>
 {% endmacro %}
 
@@ -37,7 +42,14 @@
   {% endif %}
 
   {% if completadas %}
-    <h2 class="compra-titulo">Hechas</h2>
+    <div class="hoy-cabecera">
+      <h2 class="compra-titulo">Hechas</h2>
+      <form method="post" action="{{ url_for('tareas.borrar_hechas') }}"
+            onsubmit="return confirm('¿Borrar todas las tareas hechas?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="boton boton-secundario boton-pequeno" type="submit">🗑️ Borrar las hechas</button>
+      </form>
+    </div>
     <ul class="compra-filas lista-unica" aria-label="Hechas">
       {% for tarea in completadas %}{{ fila(tarea) }}{% endfor %}
     </ul>

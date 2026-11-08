@@ -112,11 +112,11 @@ def test_aviso_en_el_inicio(cliente_con_sesion):
     _nuevo(cliente_con_sesion)
     med = Medicamento.query.one()
     texto = cliente_con_sesion.get("/").get_data(as_text=True)
-    assert "Medicación" in texto and "Pregabalina" in texto and "09:00" in texto
+    assert "Medicación" in texto and "Pregabalina" in texto and "09:00" in texto and "0 de 2 tomadas" in texto
 
     respuesta = _tomar(cliente_con_sesion, med, "09:00", volver="/")
     assert respuesta.location == "/"                    # vuelve al inicio
-    assert "Tomada" in cliente_con_sesion.get("/").get_data(as_text=True)
+    assert "1 de 2 tomadas" in cliente_con_sesion.get("/").get_data(as_text=True)
 
 
 def test_avisos_json(cliente_con_sesion):

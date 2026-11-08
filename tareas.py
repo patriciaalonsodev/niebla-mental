@@ -108,3 +108,13 @@ def borrar(tarea_id):
     db.session.commit()
     flash("Tarea borrada", "info")
     return redirect(url_for("tareas.listado"))
+
+
+@bp.post("/borrar-hechas")
+def borrar_hechas():
+    hechas = db.session.scalars(db.select(Tarea).filter_by(usuario_id=current_user.id, completada=True)).all()
+    for tarea in hechas:
+        db.session.delete(tarea)
+    db.session.commit()
+    flash(f"{len(hechas)} {'tarea borrada' if len(hechas) == 1 else 'tareas borradas'}", "info")
+    return redirect(url_for("tareas.listado"))
