@@ -43,3 +43,11 @@ def test_barra_con_menu_mas(cliente_con_sesion):
     texto = cliente_con_sesion.get("/").get_data(as_text=True)
     assert 'popovertarget="menu-mas"' in texto and 'id="menu-mas"' in texto
     assert 'nav-mas nav-activo' in cliente_con_sesion.get("/compra/").get_data(as_text=True)
+
+
+def test_boton_de_atajos_si_hay_reloj(cliente_con_sesion):
+    assert "shortcuts://" not in cliente_con_sesion.get("/").get_data(as_text=True)
+    cliente_con_sesion.post("/perfil/reloj/clave")
+    texto = cliente_con_sesion.get("/").get_data(as_text=True)
+    assert "shortcuts://x-callback-url/run-shortcut?name=Pasos%20Niebla%20Mental" in texto
+    assert "Sue%25C3%25B1o%2520Niebla%2520Mental" in texto        # el de sueño va dentro, codificado

@@ -97,6 +97,12 @@
     </a>
   </div>
 
+  {% if enlace_atajos %}
+    <a class="boton boton-secundario boton-ancho boton-atajos" href="{{ enlace_atajos }}">
+      {{ icono("reloj", "⌚", 26) }} Actualizar pasos y sueño</a>
+    <p class="ayuda ayuda-atajos">Lanza tus atajos del iPhone y vuelve aquí.</p>
+  {% endif %}
+
   {# Captura rápida: se guarda en la bandeja y se ordena después #}
   {% from "captura/_macros.html" import formulario_apunte %}
   <details class="panel captura hoy-apuntar">

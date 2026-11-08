@@ -1930,3 +1930,6 @@ a.boton-redondo { text-decoration: none; }
 
 .med-siguiente { margin: 0.4rem 0 0.2rem; }
 .med-resumen { margin: 0.2rem 0 0; color: var(--texto-suave); font-size: 0.95rem; }
+
+.boton-atajos { display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; margin-top: 0.25rem; }
+.ayuda-atajos { text-align: center; margin: 0.3rem 0 1rem; }

@@ -142,6 +142,19 @@ def _icono(app, nombre, emoji, tam):
     return Markup(f'<img class="icono-mini" src="{url}" alt="" width="{int(tam)}" height="{int(tam)}">')
 
 
+def _enlace_atajos():
+    """Enlace que, en el iPhone, ejecuta los atajos de pasos y de sueño
+    seguidos y vuelve a la app (x-callback-url de Atajos)."""
+    from urllib.parse import quote
+
+    def ejecutar(nombre, despues):
+        return (f"shortcuts://x-callback-url/run-shortcut?name={quote(nombre)}"
+                f"&x-success={quote(despues, safe='')}&x-error={quote(despues, safe='')}")
+
+    volver = url_for("inicio", _external=True)
+    return ejecutar("Pasos Niebla Mental", ejecutar("Sueño Niebla Mental", volver))
+
+
 def _url_logo(app):
     """El logo, si está guardado en static/img/logo.png (con ?v= para que
     el navegador lo actualice cuando cambie)."""
@@ -211,6 +224,7 @@ def _registrar_rutas_basicas(app):
             pasos=pasos,
             objetivo_pasos=objetivo,
             por_ciento_pasos=min(100, round((pasos or 0) * 100 / objetivo)),
+            enlace_atajos=_enlace_atajos() if current_user.api_token_hash else None,
             form_apunte=FormularioApunte(),
             num_apuntes=len(apuntes_pendientes()),
         )
